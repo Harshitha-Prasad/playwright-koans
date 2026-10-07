@@ -4,7 +4,7 @@
 
 import { test, expect, type APIRequestContext, type Browser, type Frame, type Page } from '@playwright/test';
 
-type LocatorChallenge = { id: string; title: string; answer: string; starter?: string };
+type LocatorChallenge = { id: string; title: string; target: string; answer: string; starter?: string };
 type StepChallenge = {
   id: string;
   title: string;
@@ -148,6 +148,50 @@ test.describe('Playground: locators', () => {
     await input.fill('page.getByRol(');
     await page.getByRole('button', { name: 'Check locator' }).click();
     await expect(verdict).toContainText('Not a locator yet');
+  });
+
+  test('"Show the HTML" marks the element and names the role that real Playwright finds it by', async ({ page, request }) => {
+    const { locatorChallenges } = await loadContent(request);
+    await page.goto('playground.html');
+    const frame = page.frameLocator('iframe');
+    await expect(frame.getByRole('heading', { name: 'Koans Café' })).toBeVisible();
+
+    for (const challenge of locatorChallenges) {
+      await page.getByRole('navigation', { name: 'Challenges' }).getByRole('button', { name: challenge.title, exact: true }).click();
+      await page.getByRole('button', { name: 'Show the HTML' }).click();
+      await expect(page.locator('.pg-html-line.target').first(), challenge.id).toBeVisible();
+
+      const line = page.locator('.pg-roles > li').first();
+      const role = await line.getAttribute('data-role');
+      const name = await line.getAttribute('data-name');
+      if (role) {
+        const byRole = frame.getByRole(role as Parameters<Page['getByRole']>[0], name ? { name, exact: true } : {});
+        await expect(byRole.and(frame.locator(challenge.target).first()), `${challenge.id}: ${role} "${name}"`).toHaveCount(1);
+      }
+      // The elements it is said to sit inside are found by their roles as well.
+      for (const ancestor of await page.locator('.pg-roles ul > li').all()) {
+        const ancestorRole = (await ancestor.getAttribute('data-role')) as Parameters<Page['getByRole']>[0];
+        const ancestorName = await ancestor.getAttribute('data-name');
+        const byRole = frame.getByRole(ancestorRole, ancestorName ? { name: ancestorName, exact: true } : {});
+        const ancestors = frame.locator(challenge.target).first().locator('xpath=ancestor::*');
+        await expect(byRole.and(ancestors).first(), `${challenge.id}: inside ${ancestorRole} "${ancestorName}"`).toBeAttached();
+      }
+      await page.getByRole('button', { name: 'Hide the HTML' }).click();
+    }
+  });
+
+  test('the HTML of the Cold Brew button shows its list item, without the yellow highlight', async ({ page }) => {
+    await page.goto('index.html');
+    await expect(page.getByRole('status')).toContainText('strict mode violation');
+    await page.getByRole('button', { name: 'Show the HTML' }).click();
+
+    const html = page.locator('.pg-html');
+    await expect(html).toContainText('<li data-testid="product-card">');
+    await expect(html.locator('.target')).toHaveText('<button type="button">Add to cart</button>');
+    await expect(html).not.toContainText('style=');
+    await expect(page.locator('.pg-roles')).toContainText('<button> has the role button and the name "Add to cart"');
+    await expect(page.locator('.pg-roles')).toContainText('<li> has the role listitem');
+    await expect(page.locator('.pg-roles')).toContainText('<ul> has the role list and the name "Menu"');
   });
 
   test('the challenge on the home page can be solved in place', async ({ page }) => {

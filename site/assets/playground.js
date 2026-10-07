@@ -4,7 +4,7 @@
 //   steps     write a few lines of Playwright test code; a miniature runtime runs them
 //   code      write a JavaScript function; hidden tests run against it in a Web Worker
 
-import { evaluateLocator } from './locator-engine.js';
+import { describeElement, evaluateLocator } from './locator-engine.js';
 import { runSteps } from './pw-runtime.js';
 import { brokenRules } from './rules.js';
 import { el, readSection, saveResult } from './store.js';
@@ -50,6 +50,58 @@ function locatorQuality(used, allowed = []) {
   if (flagged('css')) return 'It works. CSS classes and tag names are implementation details, though: a role, label or text survives a restyle.';
   if (flagged('getByTestId')) return 'It works. A test id is a fair choice, but here a role or label says more about what the user sees.';
   return 'Built from what a user perceives, so it survives refactoring.';
+}
+
+const VOID_TAGS = new Set(['img', 'input', 'br', 'hr', 'meta', 'link']);
+const MAX_HTML_LINES = 14;
+
+/**
+ * Pretty-prints an element as HTML, one line per entry: { text, depth, target }.
+ * `styleOf` returns the style attribute to print, so the yellow highlight never shows up in it.
+ */
+function htmlLines(element, targets, styleOf, depth = 0, inTarget = false) {
+  const tag = element.localName;
+  const target = inTarget || targets.includes(element);
+  const attributes = [...element.attributes]
+    .map((attribute) => [attribute.name, attribute.name === 'style' ? styleOf(element) : attribute.value])
+    .filter(([name, value]) => name !== 'style' || value)
+    .map(([name, value]) => (value === '' ? ` ${name}` : ` ${name}="${value.length > 48 ? `${value.slice(0, 45)}…` : value}"`))
+    .join('');
+  const open = `<${tag}${attributes}>`;
+  if (VOID_TAGS.has(tag)) return [{ text: open, depth, target }];
+
+  const children = [...element.childNodes].filter((node) => node.nodeType === 1 || (node.nodeType === 3 && node.textContent.trim()));
+  if (children.every((node) => node.nodeType === 3)) {
+    const text = children.map((node) => node.textContent.trim().replace(/\s+/g, ' ')).join(' ');
+    return [{ text: `${open}${text}</${tag}>`, depth, target }];
+  }
+  return [
+    { text: open, depth, target },
+    ...children.flatMap((node) =>
+      node.nodeType === 1
+        ? htmlLines(node, targets, styleOf, depth + 1, target)
+        : [{ text: node.textContent.trim().replace(/\s+/g, ' '), depth: depth + 1, target }],
+    ),
+    { text: `</${tag}>`, depth, target },
+  ];
+}
+
+/** The surroundings worth showing for an element: enough to see its label, row or list item. */
+function htmlContext(element, targets, styleOf) {
+  const body = element.ownerDocument.body;
+  const fits = (candidate) => candidate && candidate !== body && htmlLines(candidate, targets, styleOf).length <= MAX_HTML_LINES;
+  // A wrapper that holds nothing else (a table cell, a label around a checkbox) says little: go up
+  // while that is all there is, then come back down if the result is too much to read.
+  const chain = [element.parentElement];
+  while (chain.at(-1) && chain.at(-1) !== body && chain.at(-1).childElementCount === 1) chain.push(chain.at(-1).parentElement);
+  const container = chain.reverse().find(fits);
+  if (container) return htmlLines(container, targets, styleOf);
+
+  const parent = element.parentElement;
+  const own = htmlLines(element, targets, styleOf, 1);
+  if (!parent || parent === body) return htmlLines(element, targets, styleOf);
+  const lines = [{ text: htmlLines(parent, [], styleOf)[0].text, depth: 0 }, { text: '…', depth: 1 }, ...own, { text: '…', depth: 1 }, { text: `</${parent.localName}>`, depth: 0 }];
+  return lines;
 }
 
 /** Runs a JavaScript answer in a worker and gives up if it does not finish. */
@@ -99,6 +151,8 @@ export function mountPlayground(container, { tracks, compact = false }) {
   });
   const runButton = el('button', { type: 'button', class: 'button' });
   const hintButton = el('button', { type: 'button', class: 'link-button' }, 'Hint');
+  const inspectButton = el('button', { type: 'button', class: 'link-button', 'aria-expanded': 'false' }, 'Show the HTML');
+  const inspect = el('div', { class: 'pg-inspect', hidden: true });
   const answerButton = el('button', { type: 'button', class: 'link-button' }, 'Show an answer');
   const resetButton = el('button', { type: 'button', class: 'link-button' }, 'Start over');
   const nextButton = el('button', { type: 'button', class: 'link-button', hidden: true }, 'Next challenge');
@@ -116,10 +170,11 @@ export function mountPlayground(container, { tracks, compact = false }) {
     prompt,
     compact ? null : chips,
     editor,
-    el('div', { class: 'pg-actions' }, runButton, hintButton, answerButton, compact ? null : resetButton, nextButton),
+    el('div', { class: 'pg-actions' }, runButton, inspectButton, hintButton, answerButton, compact ? null : resetButton, nextButton),
     verdict,
     details,
     extra,
+    inspect,
   );
   container.append(
     el(
@@ -186,6 +241,70 @@ export function mountPlayground(container, { tracks, compact = false }) {
       const slack = Math.max(24, (view.innerHeight - (bottom - top)) / 2);
       view.scrollTo({ top: Math.max(0, top - slack) });
     }
+  }
+
+  // ----- the HTML behind a locator challenge -----
+
+  function closeInspect() {
+    inspect.hidden = true;
+    inspect.replaceChildren();
+    inspectButton.setAttribute('aria-expanded', 'false');
+    inspectButton.textContent = 'Show the HTML';
+  }
+
+  /** "<li>" with its role and accessible name, the two things getByRole looks at. */
+  function roleLine(element) {
+    const { role, name } = describeElement(element);
+    return el(
+      'li',
+      { 'data-role': role ?? '', 'data-name': name.length <= 40 ? name : '' },
+      el('code', {}, `<${element.localName}>`),
+      role ? [' has the role ', el('code', {}, role)] : ' has no role, so getByRole cannot find it. Use its text, title or test id.',
+      role && name && name.length <= 40 ? [' and the name ', el('code', {}, `"${name}"`)] : null,
+    );
+  }
+
+  function renderInspect() {
+    if (!frameDocument) return;
+    const targets = [...frameDocument.querySelectorAll(current().target)];
+    if (targets.length === 0) {
+      inspect.replaceChildren(el('p', {}, 'The element is not on the page at the moment.'));
+      return;
+    }
+    const styleOf = (element) => (highlighted.has(element) ? highlighted.get(element) : element.style.cssText);
+    const [first] = targets;
+    const lines = htmlContext(first, targets, styleOf);
+    const code = el(
+      'pre',
+      { class: 'pg-html' },
+      lines.map((line) => el('span', { class: line.target ? 'pg-html-line target' : 'pg-html-line' }, `${'  '.repeat(line.depth)}${line.text}\n`)),
+    );
+    const ancestors = [];
+    for (let parent = first.parentElement; parent && parent !== frameDocument.body && ancestors.length < 3; parent = parent.parentElement) {
+      if (describeElement(parent).role) ancestors.push(parent);
+    }
+    inspect.replaceChildren(
+      el(
+        'p',
+        {},
+        targets.length === 1 ? 'The element you are after is marked.' : `You are after ${targets.length} elements. They are marked where they fit; the rest look the same.`,
+        ' On a real page you would find this with right-click, Inspect.',
+      ),
+      code,
+      el('p', {}, 'A role is not written in the HTML. It comes from the tag:'),
+      el('ul', { class: 'pg-roles' }, roleLine(first), ancestors.length ? el('li', {}, 'It sits inside:', el('ul', {}, ancestors.map(roleLine))) : null),
+    );
+  }
+
+  function toggleInspect() {
+    if (!inspect.hidden) {
+      closeInspect();
+      return;
+    }
+    renderInspect();
+    inspect.hidden = false;
+    inspectButton.setAttribute('aria-expanded', 'true');
+    inspectButton.textContent = 'Hide the HTML';
   }
 
   // ----- the three ways of marking -----
@@ -395,6 +514,8 @@ export function mountPlayground(container, { tracks, compact = false }) {
     editor.rows = Math.max(TRACKS[track].lines, editor.value.split('\n').length + 1);
     extra.replaceChildren();
     details.replaceChildren();
+    closeInspect();
+    inspectButton.hidden = track !== 'locators';
     nextButton.hidden = true;
     renderNavigation();
     if (track === 'locators') {
@@ -456,6 +577,7 @@ export function mountPlayground(container, { tracks, compact = false }) {
   });
   runButton.addEventListener('click', () => run(true));
   select.addEventListener('change', () => selectChallenge(Number(select.value)));
+  inspectButton.addEventListener('click', toggleInspect);
   hintButton.addEventListener('click', () => extra.replaceChildren(el('p', {}, current().hint ?? 'Read the failing test or the error message once more: it names what is missing.')));
   answerButton.addEventListener('click', () => {
     const answer = current().answer ?? current().solution;

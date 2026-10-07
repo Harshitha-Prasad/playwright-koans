@@ -163,6 +163,8 @@ To change the site's name or the repository link, edit `site/site.config.mjs`.
 
 Real Playwright cannot run inside a web page, so the playground's locator and test-step tracks use a small imitation (`site/assets/locator-engine.js` and `site/assets/pw-runtime.js`). `npm run site:test` runs every reference answer and every listed mistake twice, once in the imitation and once in real Playwright, and fails if the verdicts or the error headlines differ. The JavaScript track needs no imitation: answers run for real in a Web Worker.
 
+Every locator challenge has a "Show the HTML" link that prints the element with its surroundings, and the role and name it is found by. The same test run checks those roles and names against real Playwright.
+
 ### Adding content
 
 - **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. A `###` heading starts a group of questions. Add new questions at the end of a file, because the site numbers them by position. It appears on the topic page and in the mock interview.

@@ -133,6 +133,12 @@ function roleOf(element) {
   return explicit || implicitRole(element);
 }
 
+/** The role and accessible name of an element: what getByRole(role, { name }) looks at. */
+export function describeElement(element) {
+  const role = roleOf(element);
+  return { role, name: role ? accessibleName(element, role) : '' };
+}
+
 /** Visible text of an element for naming purposes: skips hidden parts, uses alt text for images. */
 function contentName(element) {
   let text = '';

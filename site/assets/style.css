@@ -1157,3 +1157,39 @@ button.button {
   display: block;
   overflow-x: auto;
 }
+
+/* The HTML behind a locator challenge */
+.pg-inspect {
+  margin-top: 12px;
+  color: var(--muted);
+}
+
+.pg-html {
+  margin: 0 0 12px;
+  padding: 10px 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  max-width: none;
+}
+
+.pg-html-line {
+  display: block;
+  padding: 0 12px;
+  min-width: max-content;
+  white-space: pre;
+}
+
+.pg-html-line.target {
+  background: rgba(255, 212, 59, 0.22);
+  box-shadow: inset 3px 0 0 #e09f00;
+}
+
+.pg-roles {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.pg-roles ul {
+  padding-left: 1.2em;
+}
