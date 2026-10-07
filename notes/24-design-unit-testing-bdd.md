@@ -33,12 +33,12 @@ class LoginPage extends BasePage {                                       // inhe
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html), and checked by running the code.
 
 **Interface vs abstract class in TypeScript?**
 An `interface` is a pure contract that disappears at compile time; a class can implement several. An `abstract class` can hold shared code and state; a class can extend only one. Access modifiers: `public`, `protected` (the class and its subclasses), `private` (the class only; `#field` makes it private at runtime too), and `readonly`.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Classes](https://www.typescriptlang.org/docs/handbook/2/classes.html)
 
 **SOLID applied to test code**
 - **S**ingle responsibility: a page object models one page. It doesn't also create test data or send emails.
@@ -47,7 +47,7 @@ Source: interview handbook, not checked against documentation.
 - **I**nterface segregation: small interfaces (`Searchable`, `Paginated`) rather than one big `Page` interface.
 - **D**ependency inversion: tests depend on abstractions that fixtures inject, not on concrete clients they create themselves.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **Design patterns you can name in your own framework**
 | Pattern | Where it appears in test automation |
@@ -71,7 +71,7 @@ class UserBuilder {                                   // Builder
 const admin = new UserBuilder().withRole('admin').build();
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism | Playwright](https://playwright.dev/docs/test-parallel), and checked by running the code.
 
 ### Unit testing and test doubles
 
@@ -84,10 +84,10 @@ This is asked very often.
 - **Mock:** pre-programmed with *expectations*. The test fails if it isn't called the expected way.
 - **Fake:** a working but simplified implementation, such as an in-memory database or a local email server.
 
-In Playwright terms: `page.route(...).fulfill()` is a **stub** of the backend, and a **fake** is a mock server like WireMock that has real logic.
+In Playwright terms: `page.route()` with `route.fulfill()` is a **stub** of the backend, and a **fake** is a simplified but working backend, such as an in-memory version of the API.
 
 ```ts
-// Vitest / Jest
+// Vitest (in Jest, use jest.fn() instead of vi.fn())
 import { vi, expect, test } from 'vitest';
 test('sends a welcome email once', async () => {
   const mailer = { send: vi.fn().mockResolvedValue({ ok: true }) };   // spy + stubbed return value
@@ -102,22 +102,22 @@ Source: interview handbook, not checked against documentation.
 **Unit test frameworks in the JavaScript and TypeScript world?**
 Jest (the long-time standard), Vitest (fast, Vite-native, Jest-compatible API), Mocha + Chai, and Node's built-in `node:test`. Each test follows the same structure, **Arrange → Act → Assert**, with one reason to fail.
 
-Source: interview handbook, not checked against documentation.
+Source: [Comparisons with Other Test Runners | Guide | Vitest](https://vitest.dev/guide/comparisons), [Test runner | Node.js Documentation](https://nodejs.org/api/test.html)
 
 **Code coverage: what does it tell you, and what doesn't it?**
-Statement, branch, function and line coverage (tools: Istanbul/`c8`, or `--coverage` in Jest and Vitest). It shows which code was *executed*, not whether it was *checked*. A test with no assertions can still reach 100% coverage. Treat coverage as a way to find untested code, not as a quality target. **Mutation testing** (Stryker) measures test strength: it makes small changes to the code and checks whether your tests fail.
+Statement, branch, function and line coverage (tools: Istanbul or V8's built-in coverage, through `--coverage` in Jest and Vitest). It shows which code was *executed*, not whether it was *checked*. A test with no assertions can still reach 100% coverage. Treat coverage as a way to find untested code, not as a quality target. **Mutation testing** (Stryker) measures test strength: it makes small changes to the code and checks whether your tests fail.
 
-Source: interview handbook, not checked against documentation.
+Source: [Configuring Jest · Jest](https://jestjs.io/docs/configuration#coveragethreshold-object), [Coverage | Guide | Vitest](https://vitest.dev/guide/coverage), [What is mutation testing? | Stryker Mutator](https://stryker-mutator.io/docs/)
 
 **TDD in one sentence, and your honest view**
 Red → green → refactor: write a failing test, write the minimum code to pass it, then clean up. It's mostly a developer practice. As an SDET you support it through pairing and by helping define acceptance tests up front (ATDD/BDD).
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 ### BDD with Cucumber and Gherkin
 
 **Gherkin keywords**
-`Feature`, `Background` (steps shared by every scenario in the file), `Scenario`, `Scenario Outline` + `Examples` (data-driven), `Given` (context), `When` (action), `Then` (outcome), `And`/`But`, tags (`@smoke`), data tables and doc strings.
+`Feature`, `Background` (steps shared by every scenario in the feature or rule), `Scenario`, `Scenario Outline` + `Examples` (data-driven), `Given` (context), `When` (action), `Then` (outcome), `And`/`But`, tags (`@smoke`), data tables and doc strings.
 
 ```gherkin
 @checkout
@@ -144,14 +144,15 @@ Feature: Checkout
     Then the cart contains 3 items
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Reference | Cucumber](https://cucumber.io/docs/gherkin/reference/), and checked by running the code.
 
 **Step definitions with Playwright**
 (using `playwright-bdd`, which runs Gherkin through the Playwright test runner so you keep fixtures, parallelism and traces):
 
 ```ts
-import { createBdd } from 'playwright-bdd';
-const { Given, When, Then } = createBdd();
+import { createBdd, DataTable } from 'playwright-bdd';
+import { test } from './fixtures';                 // base.extend() that adds cartApi
+const { Given, When, Then } = createBdd(test);    // createBdd() alone gives only the built-in fixtures
 
 Given('my cart total is {float} EUR', async ({ cartApi }, total: number) => {
   await cartApi.seedCartWithTotal(total);           // setup through the API, not the UI
@@ -166,14 +167,14 @@ Then('the shipping cost is {float} EUR', async ({ page }, shipping: number) => {
 
 With classic `@cucumber/cucumber`, state is shared through the **World** object (`this`), and `Before`/`After` hooks handle setup and teardown, with tags for filtering (`Before({ tags: '@admin' }, …)`).
 
-Source: interview handbook, not checked against documentation.
+Source: [Playwright-style steps | Playwright-BDD documentation](https://vitalets.github.io/playwright-bdd/#/writing-steps/playwright-style), [Hooks | cucumber-js](https://github.com/cucumber/cucumber-js/blob/main/docs/support_files/hooks.md), and checked by running the code.
 
 **Good vs bad Gherkin**
-Write *declarative* steps that describe business behaviour, not *imperative* UI scripts. Good: `When I place an order`. Bad: `When I click "#btn-submit"`. Aim for one behaviour per scenario, 3–7 steps, no technical details, and reusable steps (with parameters) rather than near-duplicates.
+Write *declarative* steps that describe business behaviour, not *imperative* UI scripts. Good: `When I place an order`. Bad: `When I click "#btn-submit"`. Aim for one behaviour per scenario, 3–5 steps, no technical details, and reusable steps (with parameters) rather than near-duplicates.
 
-Source: interview handbook, not checked against documentation.
+Source: [Writing better Gherkin | Cucumber](https://cucumber.io/docs/bdd/better-gherkin/), [Reference | Cucumber](https://cucumber.io/docs/gherkin/reference/#steps)
 
 **When does BDD pay off, and when doesn't it?**
 It pays off when product owners and business analysts actually read or co-write the scenarios (Three Amigos), and the feature files serve as living documentation. It doesn't pay off when only QA reads them: then Gherkin is an extra layer between the test and the code, with duplicate step definitions and slower debugging. It's honest to say you'd use plain Playwright tests with `test.step()` for readability in that case.
 
-Source: interview handbook, not checked against documentation.
+Source: [Who does what? | Cucumber](https://cucumber.io/docs/bdd/who-does-what/), [Playwright Test | Playwright](https://playwright.dev/docs/api/class-test#test-step)

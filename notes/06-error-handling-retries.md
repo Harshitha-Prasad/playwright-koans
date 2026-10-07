@@ -68,14 +68,14 @@ Source: [Annotations](https://playwright.dev/docs/test-annotations)
 ### More on flaky tests
 
 **Retries, good or bad?**
-Useful safety net in CI (`retries: 2`) but they hide flakiness. Playwright reports flaky tests separately, track that metric and fix the root cause. Never rely on retries for correctness. `test.describe.configure({ retries })` for targeted use.
+Useful safety net in CI (`retries: 2`) but they hide flakiness. Playwright reports flaky tests separately: track that metric and fix the root cause. Never rely on retries for correctness. `test.describe.configure({ retries })` for targeted use.
 
-Source: interview handbook, not checked against documentation.
+Source: [Retries](https://playwright.dev/docs/test-retries#retries)
 
 **How do you find the root cause of a flaky test?**
-Categorise: timing (missing await / non-web-first assertion / animation), test order dependence (shared state, parallelism), data (shared users, leftover records), environment (slow CI, third-party services), app race conditions. Use traces across runs, `--repeat-each 20`, run in isolation vs. suite, check retries report. Fix the cause: proper locator/assertion, isolated data via API, mocking unstable dependencies.
+Categorise: timing (missing await / non-web-first assertion / animation), test order dependence (shared state, parallelism), data (shared users, leftover records), environment (slow CI, third-party services), app race conditions. Use traces across runs, `--repeat-each 20`, run in isolation vs. suite, and compare the retries in the report. Fix the cause: proper locator/assertion, isolated data via API, mocking unstable dependencies.
 
-Source: interview handbook, not checked against documentation.
+Source: [Command line](https://playwright.dev/docs/test-cli), and checked by running the code.
 
 **How do you handle an overlay that appears at random (cookie banner, survey popup)?**
 ```ts
@@ -84,6 +84,6 @@ await page.addLocatorHandler(page.getByRole('dialog', { name: 'Cookies' }), asyn
 });
 ```
 
-Playwright runs the handler whenever that locator shows up before an action, then continues the action. Register it in a fixture. Better still, stop the banner from appearing by seeding the consent cookie or `storageState`.
+Playwright checks for that locator before each action or retrying assertion. If it is visible, it runs the handler first and then continues. Register it in a fixture. Better still, stop the banner from appearing by seeding the consent cookie or `storageState`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Page](https://playwright.dev/docs/api/class-page#page-add-locator-handler), and checked by running the code.

@@ -99,76 +99,76 @@ Source: [try...catch - JavaScript | MDN](https://developer.mozilla.org/en-US/doc
 **`var` vs `let` vs `const`?**
 `var`: function-scoped, hoisted and initialised to `undefined`, can be redeclared. `let`: block-scoped, hoisted but in the *temporal dead zone* until declared, not redeclarable. `const`: like `let` but the binding cannot be reassigned (the object it points to can still be mutated). Default to `const`, use `let` when reassignment is needed, never `var`.
 
-Source: interview handbook, not checked against documentation.
+Source: [var - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/var), [let - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let)
 
 **Primitive vs reference types?**
 Primitives: string, number, bigint, boolean, undefined, null, symbol, immutable, compared by value. Objects (including arrays, functions) are reference types, compared by identity. `[1] === [1]` is `false`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Primitive - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/Primitive), and checked by running the code.
 
 **Truthy and falsy values?**
 Falsy: `false, 0, -0, 0n, '', null, undefined, NaN`. Everything else is truthy, including `[]`, `{}`, `'0'`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Falsy - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/Falsy), and checked by running the code.
 
 **`null` vs `undefined`?**
 `undefined`: declared but not assigned, missing property, missing argument. `null`: intentional absence, set by the programmer. `typeof null === 'object'` is a historical bug.
 
-Source: interview handbook, not checked against documentation.
+Source: [null - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/null), [typeof - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof#typeof_null)
 
 **What is hoisting?**
-Declarations are moved to the top of their scope at compile time. `var` and function declarations are fully hoisted (functions usable before definition). `let`/`const`/`class` are hoisted but uninitialised (TDZ). Function *expressions* and arrow functions assigned to `const` are not callable before the line executes.
+Declarations behave as if they were moved to the top of their scope. Function declarations are fully hoisted (usable before definition). `var` is hoisted too, but holds `undefined` until its assignment runs. `let`/`const`/`class` are hoisted but uninitialised (TDZ). Function *expressions* and arrow functions assigned to `const` are not callable before the line executes.
 
-Source: interview handbook, not checked against documentation.
+Source: [Hoisting - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/Hoisting), and checked by running the code.
 
 **Optional chaining and nullish coalescing?**
 `a?.b?.c` returns `undefined` instead of throwing if any link is null/undefined. `x ?? 'default'` returns the right side only for `null`/`undefined` (unlike `||`, which also triggers on `0`, `''`, `false`). Both are everyday tools in test code handling API responses.
 
-Source: interview handbook, not checked against documentation.
+Source: [Optional chaining (?.) - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining), [Nullish coalescing operator (??) - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing)
 
 **Template literals and tagged templates?**
-Backtick strings with `${expr}` interpolation and multi-line support. Tagged templates (`tag\`...``) call a function with the string parts, used by some libraries (e.g. `sql`...``).
+Backtick strings with `${expr}` interpolation and multi-line support. Tagged templates (``tag`...` ``) call a function with the string parts and the interpolated values, used by some libraries (e.g. ``sql`...` ``).
 
-Source: interview handbook, not checked against documentation.
+Source: [Template literals (Template strings) - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), and checked by running the code.
 
 ### Functions, scope and `this`
 
 **How does `this` work?**
 Determined by *how* a function is called: method call → the object; plain call → `undefined` in strict mode (global object in sloppy mode); `new` → the new instance; `call/apply/bind` → explicit; arrow function → inherited from enclosing scope. Page-object bug to know: passing `this.method` as a callback loses `this`, use an arrow or `.bind(this)`.
 
-Source: interview handbook, not checked against documentation.
+Source: [this - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/this), and checked by running the code.
 
 **`call`, `apply`, `bind`?**
 All set `this` explicitly. `call(thisArg, a, b)` and `apply(thisArg, [a, b])` invoke immediately; `bind(thisArg)` returns a new function with `this` fixed.
 
-Source: interview handbook, not checked against documentation.
+Source: [Function.prototype.call() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call), [Function.prototype.bind() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind), and checked by running the code.
 
 **What is an IIFE and why did people use it?**
 Immediately Invoked Function Expression `(() => { ... })()`, creates a private scope. Common before modules; still used for top-level async in scripts.
 
-Source: interview handbook, not checked against documentation.
+Source: [IIFE - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/IIFE)
 
 **Higher-order functions and pure functions?**
 HOF: takes or returns functions (`map`, `filter`, `reduce`). Pure: same input → same output, no side effects. Pure helpers are easier to test and to reason about in a framework.
 
-Source: interview handbook, not checked against documentation.
+Source: [First-class function - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/First-class_Function)
 
 **Explain currying and function composition briefly**
 Currying: `f(a)(b)(c)`, transforms a multi-arg function into a chain. Composition: `compose(f, g)(x) = f(g(x))`. Rarely needed in test code but shows fluency; used in some assertion helpers and pipelines.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 ### Objects, arrays, prototypes and classes
 
 **Common array methods, know them cold**
 `map`, `filter`, `reduce`, `find`, `findIndex`, `some`, `every`, `includes`, `forEach`, `flat`, `flatMap`, `sort` (mutates! comparator returns negative/zero/positive), `slice` (non-mutating) vs `splice` (mutating), `Array.from`, `Object.keys/values/entries`. Be able to write a `reduce` that groups or sums.
 
-Source: interview handbook, not checked against documentation.
+Source: [Array - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array#copying_methods_and_mutating_methods), [Array.prototype.sort() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort), and checked by running the code.
 
 **What is prototypal inheritance?**
-Every object has an internal `[[Prototype]]`. Property lookup walks the chain. Classes are syntactic sugar over constructor functions and prototypes. `Object.create(proto)` creates an object with a given prototype.
+Every object has an internal `[[Prototype]]`, which is another object or `null`. Property lookup walks the chain. Classes are syntactic sugar over constructor functions and prototypes. `Object.create(proto)` creates an object with a given prototype.
 
-Source: interview handbook, not checked against documentation.
+Source: [Inheritance and the prototype chain - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Inheritance_and_the_prototype_chain)
 
 **ES6 classes, `constructor`, `extends`, `super`, `static`, getters, private fields**
 ```js
@@ -184,61 +184,61 @@ class LoginPage extends BasePage {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Classes - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes), and checked by running the code.
 
 **What are `Map`, `Set`, `WeakMap`?**
-`Map`: key/value with any key type, ordered, `.size`. `Set`: unique values. `WeakMap/WeakSet`: keys are objects held weakly (garbage-collectable), used for caching metadata without leaks.
+`Map`: key/value with any key type, keeps insertion order, `.size`. `Set`: unique values. `WeakMap/WeakSet`: keys are objects (or non-registered symbols) held weakly (garbage-collectable), used for caching metadata without leaks.
 
-Source: interview handbook, not checked against documentation.
+Source: [Map - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map), [WeakMap - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/WeakMap)
 
 **`JSON.stringify` / `JSON.parse` gotchas?**
-`undefined`, functions, symbols are dropped; `Date` becomes string; `NaN/Infinity` become `null`; circular references throw. Use the replacer/reviver arguments for control.
+`undefined`, functions, symbols are dropped from objects and become `null` in arrays; `Date` becomes string; `NaN/Infinity` become `null`; circular references and `BigInt` values throw. Use the replacer/reviver arguments for control.
 
-Source: interview handbook, not checked against documentation.
+Source: [JSON.stringify() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify), and checked by running the code.
 
 **Getters/setters, `Object.freeze`, `Object.defineProperty`?**
-`freeze` makes an object shallowly immutable (useful for constants/config). `defineProperty` controls enumerable/writable/configurable.
+`freeze` makes an object shallowly immutable (useful for constants/config). `defineProperty` controls enumerable/writable/configurable (all `false` unless set) and can define a getter and setter.
 
-Source: interview handbook, not checked against documentation.
+Source: [Object.freeze() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze), [Object.defineProperty() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty), and checked by running the code.
 
 **What is the difference between `Object.keys`, `for...in`, `for...of`?**
-`Object.keys`: own enumerable string keys. `for...in`: enumerable keys including inherited ones, avoid for arrays. `for...of`: iterates iterables (arrays, strings, Maps, Sets, generators) by value.
+`Object.keys`: own enumerable string keys. `for...in`: enumerable string keys including inherited ones, avoid for arrays. `for...of`: iterates iterables (arrays, strings, Maps, Sets, generators) by value.
 
-Source: interview handbook, not checked against documentation.
+Source: [for...in - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...in), [for...of - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/for...of#difference_between_for...of_and_for...in), and checked by running the code.
 
 **Iterators and generators?**
 An iterable implements `[Symbol.iterator]` returning an object with `next()`. Generators (`function*`, `yield`) build iterators lazily. Async generators (`for await`) are handy for paging through API results.
 
-Source: interview handbook, not checked against documentation.
+Source: [Iteration protocols - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols), [function* - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*), and checked by running the code.
 
 ### Modules, Node.js and tooling
 
 **CommonJS vs ES modules?**
-CJS: `require`/`module.exports`, synchronous, Node's original. ESM: `import`/`export`, static, tree-shakeable, standard. Playwright projects typically use ESM syntax in TS compiled/transpiled appropriately. Know `"type": "module"` in `package.json` and file extensions `.mjs/.cjs`.
+CJS: `require`/`module.exports`, synchronous, Node's original. ESM: `import`/`export`, static, tree-shakeable, standard. Playwright tests written in TypeScript use `import`/`export` syntax, and Playwright transforms them to JavaScript itself. Know `"type": "module"` in `package.json` and file extensions `.mjs/.cjs`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Modules: Packages | Node.js documentation](https://nodejs.org/api/packages.html#determining-module-system), [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
 
 **What is `package.json`? `dependencies` vs `devDependencies`? What is `package-lock.json`?**
-Manifest with scripts and dependency ranges. `devDependencies` are not installed in production installs. The lockfile pins exact resolved versions for reproducible installs, commit it; use `npm ci` in CI.
+Manifest with scripts and dependency ranges. `devDependencies` are not installed in production installs (`npm install --production`, or `NODE_ENV=production`). The lockfile pins exact resolved versions for reproducible installs, commit it; use `npm ci` in CI.
 
-Source: interview handbook, not checked against documentation.
+Source: [package.json | npm Docs](https://docs.npmjs.com/cli/v11/configuring-npm/package-json), [package-lock.json | npm Docs](https://docs.npmjs.com/cli/v11/configuring-npm/package-lock-json)
 
 **Semantic versioning, what do `^` and `~` mean?**
-`MAJOR.MINOR.PATCH`. `^1.2.3` allows minor and patch updates (<2.0.0); `~1.2.3` allows patch only (<1.3.0). Pin Playwright and browsers explicitly to avoid surprise CI breakage.
+`MAJOR.MINOR.PATCH`. `^1.2.3` allows minor and patch updates (<2.0.0), but below 1.0.0 the caret is narrower: `^0.2.3` allows patch updates only (<0.3.0); `~1.2.3` allows patch only (<1.3.0). Pin Playwright and browsers explicitly to avoid surprise CI breakage.
 
-Source: interview handbook, not checked against documentation.
+Source: [Semantic Versioning 2.0.0](https://semver.org/), [semver: the semantic versioner for npm](https://github.com/npm/node-semver#caret-ranges-123-025-004)
 
 **`npm` vs `npx`? `npm ci` vs `npm install`?**
-`npx` runs a package binary (e.g. `npx playwright test`) without a global install. `npm ci` installs exactly from the lockfile, faster and deterministic, the right choice for pipelines.
+`npx` runs a package binary (e.g. `npx playwright test`) without a global install. `npm ci` deletes `node_modules` and installs exactly from the lockfile. It fails if the lockfile does not match `package.json` and never rewrites either file, so it is the right choice for pipelines.
 
-Source: interview handbook, not checked against documentation.
+Source: [npx | npm Docs](https://docs.npmjs.com/cli/v11/commands/npx), [npm-ci | npm Docs](https://docs.npmjs.com/cli/v11/commands/npm-ci)
 
 **Node.js basics an SDET should know?**
-`process.env` for config, `process.argv`, `fs/promises`, `path`, environment via `.env` and `dotenv`, Node event loop identical concept to the browser's, `EventEmitter`, streams for large files, `child_process` for shelling out.
+`process.env` for config, `process.argv`, `fs/promises`, `path`, environment via `.env` and `dotenv` (or the built-in `--env-file` flag), the Node event loop and its phases, `EventEmitter`, streams for large files, `child_process` for shelling out.
 
-Source: interview handbook, not checked against documentation.
+Source: [Process | Node.js documentation](https://nodejs.org/api/process.html), [The Node.js Event Loop | Node.js](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
 
 **What are ESLint and Prettier for, and how do they relate to quality?**
-ESLint: static analysis for bugs and style (e.g. floating promises, unused vars). Prettier: formatting only. Run both in a pre-commit hook (`husky` + `lint-staged`) and in CI, part of shift-left.
+ESLint: static analysis for bugs and style (e.g. unused vars, and floating promises through the typescript-eslint plugin). Prettier: formatting only. Run both in a pre-commit hook (`husky` + `lint-staged`) and in CI, part of shift-left.
 
-Source: interview handbook, not checked against documentation.
+Source: [Core Concepts - ESLint](https://eslint.org/docs/latest/use/core-concepts/), [Prettier vs. Linters | Prettier](https://prettier.io/docs/comparison)

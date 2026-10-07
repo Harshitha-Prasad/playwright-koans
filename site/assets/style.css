@@ -716,6 +716,8 @@ button.button {
 
 .pg-work {
   display: grid;
+  /* One column that may shrink: wide content (code, the chip row) scrolls inside it and never pushes it under the practice page. */
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
   min-width: 0;
 }

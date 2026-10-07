@@ -63,29 +63,29 @@ Source: [API testing](https://playwright.dev/docs/api-testing)
 **How do WebdriverIO and Playwright differ?**
 |  | WebdriverIO | Playwright |
 | --- | --- | --- |
-| Protocol | WebDriver (W3C) and WebDriver BiDi; DevTools for Chromium | Browser-native protocols over one connection |
+| Protocol | WebDriver BiDi by default, and classic WebDriver (W3C); DevTools access through Puppeteer | DevTools protocol for Chromium; patched Firefox and WebKit builds |
 | Browsers | Any browser with a driver, including real Safari and cloud grids (BrowserStack, Sauce Labs) | Bundled Chromium, Firefox and WebKit builds (and branded Chrome/Edge) |
-| Mobile | **Native mobile apps through Appium** (major strength) | Web emulation only |
-| Waiting | `waitForDisplayed`, `waitUntil`; implicit waits via config | Auto-waiting on every action + web-first assertions |
+| Mobile | **Native mobile apps through Appium** (major strength) | Mobile web emulation; no native apps |
+| Waiting | Auto-waits on element actions; `waitForDisplayed` and other `waitFor*` commands for the rest | Auto-waiting on every action + web-first assertions |
 | Test runner | WDIO testrunner with Mocha, Jasmine or Cucumber | Built-in `@playwright/test` |
-| Selectors | `$('selector')`, `$$()`, `shadow$()` | `getByRole` and other locators, pierces shadow DOM |
-| Isolation | One browser session per worker | New browser context per test (cheap, isolated) |
-| Extras | Huge plugin ecosystem, services, reporters | Trace viewer, codegen, UI mode, API testing, network mocking |
+| Selectors | `$()` (strict since v10), `$$()`, `role/` and `aria/` selectors; pierces shadow DOM since v9 | `getByRole` and other locators, pierces shadow DOM |
+| Isolation | One browser session per spec file | New browser context per test (cheap, isolated) |
+| Extras | Large ecosystem of services and reporters, network mocking, trace viewer | Trace viewer, codegen, UI mode, API testing, network mocking |
 
-Source: interview handbook, not checked against documentation.
+Source: [Why WebdriverIO?](https://webdriver.io/docs/why-webdriverio), [Selectors](https://webdriver.io/docs/selectors)
 
 **When would you choose WebdriverIO?**
 When you need native mobile testing with Appium in the same framework, real Safari on macOS or real-device clouds with deep WebDriver integration, or an existing WDIO + Cucumber estate that works well. Choose Playwright for a new web project, for speed and debuggability, and for combined UI + API testing.
 
-Source: interview handbook, not checked against documentation.
+Source: [Why WebdriverIO?](https://webdriver.io/docs/why-webdriverio)
 
 **Migrating from WebdriverIO to Playwright: what changes?**
-`browser.url()` → `page.goto()`. `$(sel).click()` → `page.locator(sel).click()`, preferably `getByRole`. Explicit waits disappear. `expect(el).toBeDisplayed()` → `await expect(locator).toBeVisible()`. Hooks → fixtures. Session-per-worker → context-per-test, so check any hidden dependencies between tests. Mention Appium tests staying on WDIO if mobile is involved.
+`browser.url()` → `page.goto()`. `$(sel).click()` → `page.locator(sel).click()`, preferably `getByRole`. Explicit waits disappear. `expect(el).toBeDisplayed()` → `await expect(locator).toBeVisible()`. Hooks → fixtures. Session-per-spec-file → context-per-test, so check any hidden dependencies between tests. Mention Appium tests staying on WDIO if mobile is involved.
 
-Source: interview handbook, not checked against documentation.
+Source: [Assertion](https://webdriver.io/docs/assertion), [Organizing Test Suite](https://webdriver.io/docs/organizingsuites)
 
 **How do WebdriverIO and Playwright compare on locators?**
-WebdriverIO's `$()` is also lazy and re-fetches, and it auto-waits for actions. Differences: `$()` takes the first match with no strictness check; role and text queries need the Testing Library integration or `aria/` selectors; shadow DOM needs `shadow$()` or deep selectors; assertions need `expect-webdriverio` to retry. Playwright has all of that built in, plus `filter`, `and`/`or` and frame locators.
+WebdriverIO's `$()` is also lazy and re-fetches, and it auto-waits for actions. Since v10 `$()` is strict too: more than one match throws a `StrictSelectorError` (v9 and earlier took the first match). Role and accessible-name queries use the `role/` and `aria/` selectors, shadow DOM is pierced automatically since v9, and the test runner ships retrying assertions (`expect-webdriverio`). Playwright adds `filter`, `and`/`or` and frame locators.
 
 *Quick-answer summary*
 
@@ -94,10 +94,10 @@ WebdriverIO's `$()` is also lazy and re-fetches, and it auto-waits for actions. 
 - **Priority:** role → label → placeholder/text → test id → CSS → XPath.
 - **Text matching:** string = substring and case-insensitive; `exact: true` = whole string and case-sensitive; regex for anything else.
 - **One of many:** `container.filter({ hasText | has }).getByRole(...)`.
-- **No waiting:** `count()`, `all()`, `allTextContents()`, `isVisible()`, `textContent()`. Assert with `expect(locator)` first.
+- **No waiting:** `count()`, `all()`, `allTextContents()`, `isVisible()`. Assert with `expect(locator)` first.
 - **`toHaveText`** = full text; **`toContainText`** = substring.
 - **Iframes:** `frameLocator()` or `contentFrame()`. **Shadow DOM:** automatic, except XPath.
 - **`fill`** for normal input; **`pressSequentially`** when each keystroke matters; `type` is deprecated.
 - **`force: true`** skips the checks and hides bugs.
 
-Source: interview handbook, not checked against documentation.
+Source: [Selectors](https://webdriver.io/docs/selectors), [Locators](https://playwright.dev/docs/locators), and checked by running the code.

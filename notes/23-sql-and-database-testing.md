@@ -33,9 +33,9 @@ SELECT DISTINCT salary FROM (
 ) t WHERE rnk = 2;
 ```
 
-With salaries 95k, 90k, 90k, 80k, 70k, 70k, all three return **90000**. Explain why `DISTINCT` matters: without it, `OFFSET 1` on a list with a tied top salary would return the top salary again.
+With salaries 95k, 90k, 90k, 80k, 70k, 70k, all three return **90000**. Explain why `DISTINCT` matters: without it, `OFFSET 1` on a list with a tied top salary would return the top salary again. If `salary` can be `NULL`, PostgreSQL sorts `NULL`s first in `DESC` order, so add `NULLS LAST` or `WHERE salary IS NOT NULL` to queries 2 and 3.
 
-Source: interview handbook, not checked against documentation.
+Source: [7.5. Sorting Rows (ORDER BY)](https://www.postgresql.org/docs/current/queries-order.html), and checked by running the code.
 
 **SQL: `ROW_NUMBER` vs `RANK` vs `DENSE_RANK`**
 For the values 95, 90, 90, 80:
@@ -44,7 +44,7 @@ For the values 95, 90, 90, 80:
 - `RANK` gives 1, 2, 2, 4 (ties share a rank, then a gap).
 - `DENSE_RANK` gives 1, 2, 2, 3 (ties share a rank, no gap).
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **SQL: highest earner in each department**
 ```sql
@@ -55,14 +55,14 @@ WHERE e.rnk = 1;
 -- Dev: Anna 90000, Fay 90000 (tie, so both are returned) · QA: Chen 95000
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **SQL: find duplicates**
 ```sql
 SELECT email, COUNT(*) AS n FROM employees GROUP BY email HAVING COUNT(*) > 1;
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **SQL: delete the duplicates, keeping the lowest id**
 ```sql
@@ -70,9 +70,9 @@ DELETE FROM employees
 WHERE id NOT IN (SELECT MIN(id) FROM employees GROUP BY email);
 ```
 
-Always run the matching `SELECT` first, and do it inside a transaction.
+Always run the matching `SELECT` first, and do it inside a transaction. Rows with a `NULL` email form one group, so all but one of them are deleted too. This form works in PostgreSQL and SQLite. MySQL rejects it, because it cannot delete from a table and select from the same table in a subquery.
 
-Source: interview handbook, not checked against documentation.
+Source: [15.2.2 DELETE Statement](https://dev.mysql.com/doc/refman/8.4/en/delete.html), and checked by running the code.
 
 **Types of JOIN**
 - `INNER JOIN` returns only rows that match in both tables.
@@ -99,7 +99,7 @@ FROM employees e JOIN employees m ON m.id = e.manager_id
 WHERE e.salary > m.salary;
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **`WHERE` vs `HAVING`**
 `WHERE` filters rows *before* grouping. `HAVING` filters groups *after* aggregation.
@@ -111,11 +111,11 @@ GROUP BY dept_id
 HAVING AVG(salary) > 80000;     -- group filter
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Data integrity checks, the SQL an SDET actually writes at work**
 ```sql
--- Orphan records: orders whose user doesn't exist
+-- Orphan records: orders whose user doesn't exist (also returns orders with a NULL user_id)
 SELECT o.* FROM orders o LEFT JOIN employees u ON u.id = o.user_id WHERE u.id IS NULL;
 
 -- Top 3 customers by paid order total
@@ -123,18 +123,18 @@ SELECT user_id, SUM(amount) AS total FROM orders
 WHERE status = 'PAID' GROUP BY user_id ORDER BY total DESC LIMIT 3;
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Theory questions to answer in one line each**
-- **Primary key** uniquely identifies a row and can't be null. **Foreign key** references another table's primary key and enforces referential integrity.
-- **`DELETE` vs `TRUNCATE` vs `DROP`:** `DELETE` removes rows (can use `WHERE`, can be rolled back, fires triggers). `TRUNCATE` removes all rows quickly (minimal logging, resets identity). `DROP` removes the table itself.
+- **Primary key** uniquely identifies a row and can't be null. **Foreign key** references another table's primary key (or a unique column) and enforces referential integrity.
+- **`DELETE` vs `TRUNCATE` vs `DROP`:** `DELETE` removes rows (can use `WHERE`, can be rolled back, fires triggers). `TRUNCATE` removes all rows quickly without scanning them and does not fire `ON DELETE` triggers. The details depend on the engine: MySQL resets `AUTO_INCREMENT` and cannot roll it back, PostgreSQL can roll it back and resets identity only with `RESTART IDENTITY`. `DROP` removes the table itself.
 - **`UNION` vs `UNION ALL`:** `UNION` removes duplicates (slower). `UNION ALL` keeps them.
 - **Index:** speeds up reads on the columns you filter and join on, and slows down writes. Use `EXPLAIN` to see whether a query uses one.
 - **Normalisation (1NF–3NF):** removes redundancy so each fact is stored once. Reporting tables are sometimes deliberately denormalised for speed.
 - **ACID:** Atomicity, Consistency, Isolation, Durability. Test it by failing a transaction halfway and checking that nothing was partly saved.
 - **SQL injection:** test inputs such as `' OR '1'='1`. The fix is parameterised queries, never string concatenation.
 
-Source: interview handbook, not checked against documentation.
+Source: [5.5. Constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), [TRUNCATE](https://www.postgresql.org/docs/current/sql-truncate.html), [15.1.37 TRUNCATE TABLE Statement](https://dev.mysql.com/doc/refman/8.4/en/truncate-table.html), [7.4. Combining Queries (UNION, INTERSECT, EXCEPT)](https://www.postgresql.org/docs/current/queries-union.html), [11.1. Introduction (Indexes)](https://www.postgresql.org/docs/current/indexes-intro.html), [Appendix M. Glossary](https://www.postgresql.org/docs/current/glossary.html), [SQL Injection Prevention - OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html)
 
 **How do you verify a UI or API action in the database?**
 ```ts
@@ -151,4 +151,4 @@ test('checkout writes a PAID order', async ({ page }) => {
 
 Senior points: use a **read-only** DB user for assertions. Wrap the connection in a worker-scoped fixture. Prefer checking through the API when one exists, because a test tied to the DB schema breaks on every migration. Never point tests at production data.
 
-Source: interview handbook, not checked against documentation.
+Source: [Data Types - node-postgres](https://node-postgres.com/features/types), and checked by running the code.

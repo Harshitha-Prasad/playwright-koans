@@ -98,7 +98,7 @@ function homePage(notes) {
   const practice = [
     {
       href: 'playground.html',
-      name: 'Playground',
+      name: 'Playwright playground',
       count: `${locatorChallenges.length + stepChallenges.length + flakyChallenges.length + codeChallenges.length} challenges`,
       text: 'Write locators, short Playwright tests and JavaScript functions, repair flaky tests, and have it all run and marked on the spot. Works on a phone.',
     },
@@ -275,13 +275,13 @@ ${notes
 function playgroundPage() {
   return layout({
     file: 'playground.html',
-    title: 'Playground',
+    title: 'Playwright playground',
     description: 'Practise Playwright locators, test steps, repairing flaky tests and JavaScript in your browser. Your answer is run and marked on the spot, with nothing to install.',
     wide: true,
     scripts: ['assets/playground-page.js'],
     body: `
-<h1>Playground</h1>
-<p class="lede">Pick a track, write your answer, and have it checked. Nothing to install, and your progress stays in this browser.</p>
+<h1>Playwright playground</h1>
+<p class="lede">Practise Playwright with TypeScript and JavaScript: locators, test steps, flaky tests and the JavaScript behind them. Pick a track, write your answer, and have it checked. Nothing to install, and your progress stays in this browser.</p>
 <div data-playground="all"></div>
 <details class="aside-note">
   <summary>How close is this to real Playwright?</summary>

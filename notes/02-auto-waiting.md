@@ -95,14 +95,14 @@ Source: [Best Practices](https://playwright.dev/docs/best-practices#debugging-on
 
 All of them retry until the expect timeout (5 s by default), and all take `.not`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Assertions](https://playwright.dev/docs/test-assertions#auto-retrying-assertions), and checked by running the code.
 
 **`toHaveText` vs `toContainText`?**
 With a string, `toHaveText` must match the full text (whitespace normalised) and `toContainText` matches a substring. Checked on `<p>Order shipped today</p>`: `toHaveText('Order shipped')` failed, `toContainText('shipped')` passed, `toHaveText(/shipped/)` passed. `toHaveText` is for element text; for an `<input>` use `toHaveValue`.
 
-Source: interview handbook, not checked against documentation.
+Source: [LocatorAssertions](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-have-text), and checked by running the code.
 
 **`toBeHidden` vs `not.toBeVisible` vs `toBeAttached`?**
 `toBeHidden` passes when the element is not in the DOM or is in the DOM but not visible. `not.toBeVisible()` is the same check. `toBeAttached` is about the DOM only: an element with `display: none` is attached and hidden. Use `not.toBeAttached()` to prove something was removed.
 
-Source: interview handbook, not checked against documentation.
+Source: [LocatorAssertions](https://playwright.dev/docs/api/class-locatorassertions#locator-assertions-to-be-hidden), and checked by running the code.

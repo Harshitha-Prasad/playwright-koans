@@ -95,123 +95,123 @@ Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.ist
 **What is the difference between error, defect and failure?**
 An *error* (mistake) is a human action that produces an incorrect result. A *defect* (bug) is the flaw in the software caused by the error. A *failure* is the observable deviation from expected behaviour when the defect is executed. Not every defect causes a failure (dead code), and not every failure is caused by a defect (environment, hardware).
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **What are the seven testing principles?**
-1. Testing shows the presence of defects, not their absence.
+1. Testing shows the presence, not the absence of defects.
 2. Exhaustive testing is impossible.
 3. Early testing saves time and money (shift-left).
 4. Defects cluster together (Pareto).
-5. Beware of the pesticide paradox, repeated tests stop finding new bugs.
+5. Tests wear out: repeated tests stop finding new defects. CTFL v4.0 no longer uses the name pesticide paradox.
 6. Testing is context dependent.
-7. Absence-of-errors is a fallacy, a bug-free system can still fail the user.
+7. Absence-of-defects fallacy: a system that passes verification can still fail the user.
 
 Senior answer: give a concrete example of at least two, e.g. "we applied defect clustering by focusing regression on the checkout module after RCA showed 60% of production incidents came from there."
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Verification vs validation?**
 Verification: are we building the product right? (reviews, static analysis, checking against specs). Validation: are we building the right product? (does it meet user needs, acceptance testing, UAT).
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Explain the test levels**
-Unit (component) → Integration (component and system integration) → System → Acceptance (user, operational, contractual, alpha/beta). Each level has different objectives, test basis, test objects, and typical defects.
+CTFL v4.0 lists five: component (unit) → component integration → system → system integration → acceptance (user, operational, contractual and regulatory, alpha and beta). Each level has different objectives, test basis, test objects, typical defects, and approach and responsibilities.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Explain the test types**
-Functional (what the system does), non-functional (how well, performance, security, usability, reliability, maintainability, portability), structural/white-box (coverage-based), change-related (confirmation/re-testing and regression).
+CTFL v4.0 names four: functional (what the system does), non-functional (how well: performance efficiency, compatibility, usability, reliability, security, maintainability, portability, safety), black-box (specification-based) and white-box (structure-based). Confirmation testing and regression testing are described separately, as testing after a change.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Static vs dynamic testing?**
 Static: no execution, reviews, walkthroughs, inspections, static analysis (linters, type checkers). Dynamic: executing the software. Static testing finds defects earlier and cheaper. TypeScript's type checker and ESLint are static testing tools you use daily, say so.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 ### Test design techniques
 
 **Equivalence partitioning and boundary value analysis?**
-EP: divide inputs into classes where the system should behave the same; test one value per class (valid and invalid). BVA: defects cluster at boundaries, so test the boundary and the values immediately either side (2-value or 3-value BVA). Example: age field 18–65 → partitions <18, 18–65, >65; boundaries 17, 18, 19, 64, 65, 66.
+EP: divide inputs into classes where the system should behave the same; test one value per class (valid and invalid). BVA: defects are likely at the edges of ordered partitions. 2-value BVA tests each boundary value and its closest neighbour in the adjacent partition; 3-value BVA tests each boundary value and both its neighbours. Example: age field 18–65 → partitions <18, 18–65, >65; 2-value gives 17, 18, 65, 66; 3-value for the boundaries 18 and 65 gives 17, 18, 19, 64, 65, 66.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Decision table testing?**
-For business rules with combinations of conditions. Columns = rules, rows = conditions and actions. Ensures every combination is considered and reveals ambiguous or missing rules. Collapse redundant columns.
+For business rules with combinations of conditions. Columns = rules, rows = conditions and actions. Ensures every combination is considered and reveals gaps or contradictions in the requirements. Delete infeasible columns and merge columns where a condition does not affect the outcome.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **State transition testing?**
-For systems with states and events (order status, login lockout). Model states, transitions, events and actions; test valid transitions, invalid transitions, and sequences (0-switch, 1-switch coverage).
+For systems with states and events (order status, login lockout). Model states, transitions, events and actions; the coverage criteria in CTFL v4.0 are all states, valid transitions (0-switch) and all transitions, which also attempts the invalid ones.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Use case / scenario testing?**
-End-to-end user flows including main path and alternative/exception flows. Basis for E2E automation scenarios.
+End-to-end user flows including main path and alternative/exception flows. Basis for E2E automation scenarios. CTFL v4.0 does not list it among its black-box techniques.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **Pairwise / orthogonal array testing?**
-Most defects are triggered by interactions of at most two parameters. Pairwise testing covers every pair of parameter values with far fewer tests than a full cartesian product. Tools: PICT, AllPairs.
+Most failures are caused by one parameter or the interaction of two, with progressively fewer by three or more. Pairwise testing covers every pair of parameter values with far fewer tests than a full cartesian product. Tool: PICT.
 
-Source: interview handbook, not checked against documentation.
+Source: [Combinatorial Methods for Trust and Assurance | CSRC](https://csrc.nist.gov/projects/automated-combinatorial-testing-for-software), [PICT documentation](https://github.com/microsoft/pict/blob/main/doc/pict.md)
 
 **Error guessing and exploratory testing, how do you make them systematic?**
-Error guessing uses experience to target likely defect areas (nulls, empties, unicode, concurrency, time zones). Exploratory testing = simultaneous learning, design and execution. Make it systematic with **session-based test management**: time-boxed charters, session notes, debriefs. Heuristics: SFDIPOT (structure, function, data, interfaces, platform, operations, time), the "Test Heuristics Cheat Sheet" (Hendrickson).
+Error guessing uses experience to target likely defect areas (nulls, empties, unicode, concurrency, time zones). Exploratory testing = designing, executing and evaluating tests at the same time while learning about the test object. Make it systematic with **session-based test management**: time-boxed sessions, a test charter with the objectives, session notes, debriefs.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 ### Test process and management
 
 **Describe the test process activities**
-Planning → monitoring & control → analysis → design → implementation → execution → completion. Be able to name outputs: test plan, test conditions, test cases, test procedures/scripts, test data, defect reports, test summary report.
+Planning → monitoring & control → analysis → design → implementation → execution → completion. Be able to name outputs: test plan, test conditions, test cases, test procedures/scripts, test data, defect reports, test completion report. The activities often run iteratively or in parallel, not strictly in this order.
 
-Source: interview handbook, not checked against documentation.
+Source: [ISTQB Certified Tester Foundation Level Syllabus v4.0.1](https://istqb.org/?sdm_process_download=1&download_id=3345)
 
 **What goes in a test plan?**
-Scope, objectives, test approach/strategy, test levels and types, entry/exit criteria, environment, tools, roles, schedule, risks and mitigations, deliverables. IEEE 829 / ISO 29119 structure.
+Scope, objectives, test approach/strategy, test levels and types, entry/exit criteria, environment, tools, roles, schedule, risks and mitigations, deliverables. ISO/IEC/IEEE 29119-3 gives a template.
 
-Source: interview handbook, not checked against documentation.
+Source: [Chapter 5: Managing the Test Activities (CTFL v4.0) | ASTQB](https://study.astqb.org/?p=24)
 
 **Explain the defect life cycle**
-New → Assigned/Open → In Progress → Fixed → Ready for Retest → Retest → Closed / Reopened; plus Rejected, Deferred, Duplicate, Not a Bug. Know the fields of a good bug report: title, environment, build, steps, expected vs actual, severity, priority, evidence (logs, screenshots, HAR, trace).
+New → Assigned/Open → In Progress → Fixed → Ready for Retest → Retest → Closed / Reopened; plus Rejected, Deferred, Duplicate, Not a Bug. The states differ by team and tool; CTFL v4.0 defines no fixed set, only a workflow from discovery to closure. Know the fields of a good bug report: title, environment, build, steps, expected vs actual, severity, priority, evidence (logs, screenshots, HAR, trace).
 
-Source: interview handbook, not checked against documentation.
+Source: [Chapter 5: Managing the Test Activities (CTFL v4.0) | ASTQB](https://study.astqb.org/?p=24)
 
 **What is risk-based testing?**
-Prioritise test effort by product risk = likelihood × impact. Identify risks (with devs, product), score them, and allocate depth of testing accordingly. Senior: describe how you used it to decide what goes into the smoke suite vs. full regression vs. exploratory.
+Prioritise test effort by product risk level, which combines likelihood and impact. Identify risks (with devs, product), score them, and allocate depth of testing accordingly. Senior: describe how you used it to decide what goes into the smoke suite vs. full regression vs. exploratory.
 
-Source: interview handbook, not checked against documentation.
+Source: [Chapter 5: Managing the Test Activities (CTFL v4.0) | ASTQB](https://study.astqb.org/?p=24)
 
 **What metrics do you report, and which do you distrust?**
 Useful: defect density per module, defect leakage (found in prod vs. pre-prod), test coverage of requirements/risks, automation pass rate over time, flaky-test rate, mean time to detect/resolve. Distrust: raw test-case counts and "% automated" without context, they measure activity, not quality.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 ### Agile and modern practice
 
 **Role of QA in Scrum? What happens in the Three Amigos?**
-QA participates in refinement (acceptance criteria, testability, edge cases), sprint planning (estimation includes testing), daily stand-up, review and retro. Three Amigos: PO, dev, QA agree on acceptance criteria before work starts, often written as Gherkin scenarios.
+The Scrum Guide has no QA or tester role: everyone who builds the Increment is a Developer. In practice QA takes part in refinement (acceptance criteria, testability, edge cases), Sprint Planning (estimation includes testing), the Daily Scrum, Sprint Review and Sprint Retrospective. Three Amigos: product owner, developer and tester discover examples together and turn user stories into Gherkin scenarios, continually and not only once at the start.
 
-Source: interview handbook, not checked against documentation.
+Source: [The Scrum Guide](https://scrumguides.org/scrum-guide.html), [Who does what? | Cucumber](https://cucumber.io/docs/bdd/who-does-what/)
 
 **Definition of Ready vs Definition of Done?**
-DoR: story is clear, sized, has acceptance criteria and testable conditions before it enters a sprint. DoD: code reviewed, unit tests passing, automated tests added, deployed to staging, documentation updated, acceptance criteria verified.
+The Scrum Guide defines only the Definition of Done; Definition of Ready is a common team practice, and CTFL v4.0 treats it as entry criteria for a user story. DoR: story is clear, sized, has acceptance criteria and testable conditions before it enters a sprint. DoD, a typical example: code reviewed, unit tests passing, automated tests added, deployed to staging, documentation updated, acceptance criteria verified.
 
-Source: interview handbook, not checked against documentation.
+Source: [The Scrum Guide](https://scrumguides.org/scrum-guide.html), [Chapter 5: Managing the Test Activities (CTFL v4.0) | ASTQB](https://study.astqb.org/?p=24)
 
 **BDD, what is it really, and what is it not?**
-BDD is a collaboration practice: discover behaviour through examples, formalise them (Gherkin: Given/When/Then), automate them. It is *not* "writing Cucumber". Senior view: Gherkin adds value when the business actually reads it; otherwise it adds a translation layer with maintenance cost. Be honest about when you would and would not use it.
+BDD is a collaboration practice with three parts: discovery (explore behaviour through examples), formulation (write them down, usually as Gherkin: Given/When/Then) and automation. It is *not* "writing Cucumber". Senior view: Gherkin adds value when the business actually reads it; otherwise it adds a translation layer with maintenance cost. Be honest about when you would and would not use it.
 
-Source: interview handbook, not checked against documentation.
+Source: [Behaviour-Driven Development | Cucumber](https://cucumber.io/docs/bdd/)
 
 **What is your test strategy for a microservices-based web product?**
 Unit tests per service (dev-owned); contract tests between consumers and providers (Pact / OpenAPI-based); API/integration tests per service in isolation with mocked dependencies; a thin E2E layer through the UI for critical journeys; non-functional tests (load on key endpoints, security scans in CI); observability and synthetic monitoring in production. Ownership and where each runs in the pipeline matter as much as the tests.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you do root cause analysis for a production incident?**
 Reproduce → gather evidence (logs, traces, metrics, user reports) → timeline → identify contributing causes (5 Whys, fishbone) → distinguish root cause from trigger → corrective actions (fix + test gap + process change) → verify and share (blameless post-mortem). For test gaps: ask why no test caught it, missing test, wrong level, wrong environment, flaky and ignored?
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.

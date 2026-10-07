@@ -87,12 +87,12 @@ Source: [Parameterize tests](https://playwright.dev/docs/test-parameterize#param
 **Structure of a test file?**
 `test.describe` blocks, `test()` cases, hooks (`beforeAll/afterAll/beforeEach/afterEach`), `test.step` for readable reports, annotations (`test.skip`, `test.fixme`, `test.fail`, `test.only`, `test.slow`), tags (`{ tag: '@smoke' }`), `test.describe.configure({ mode: 'serial' | 'parallel', retries })`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Playwright Test](https://playwright.dev/docs/api/class-test), [Annotations](https://playwright.dev/docs/test-annotations)
 
 **How do you design tests that are independent of test data?**
 Create what you need per test through the API/DB using builders with unique identifiers; clean up in fixture teardown; never share mutable users across parallel workers; use per-worker accounts if needed (`test.info().parallelIndex`).
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#avoiding-shared-state-in-parallel-tests), [Authentication](https://playwright.dev/docs/auth#moderate-one-account-per-parallel-worker)
 
 **Describe your ideal Playwright framework structure**
 ```
@@ -108,17 +108,17 @@ config/           environments, playwright.config.ts
 
 Principles: tests independent and idempotent; no sleeps; assertions in tests (or clearly named page assertions); one behaviour per test; tags for suites (@smoke, @regression); environment via config not code; lint + type-check in CI; traces on failure; reports archived.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **Page Object Model, pros, cons, alternatives?**
 POM centralises locators and actions and gives readable tests; risk is bloated god-objects and hidden assertions. Alternatives/complements: component objects, screenplay pattern (actors, tasks, questions), or "app actions" via fixtures. Senior answer expresses judgement: small page objects, composition over inheritance, fixtures for wiring.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you keep a suite fast and trustworthy as it grows?**
 Parallelism and sharding, API setup instead of UI, storageState auth, smoke vs regression tagging, quarantining flaky tests with an SLA to fix, flaky-rate dashboards, test ownership, CI time budgets, deleting redundant tests, running the right subset per change (path filters), and periodically reviewing what E2E should move down to API/component tests.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you organise locators in a page object?**
 ```ts
@@ -143,7 +143,7 @@ export class OrdersPage {
 
 Points to make: locators can be created in the constructor because they are lazy, so nothing is searched until a test uses them; expose `Locator` objects so tests can assert on them with web-first assertions; never store strings and call `page.locator(string)` everywhere; never store the result of `count()` or `textContent()` as a field.
 
-Source: interview handbook, not checked against documentation.
+Source: [Page object models](https://playwright.dev/docs/pom), and checked by running the code.
 
 ### Parallelism, workers and fixture scopes
 
@@ -156,14 +156,14 @@ A worker is a separate **Node.js operating-system process** started by the Playw
 - has its own memory, module state and worker-scoped fixtures;
 - runs **one test at a time**.
 
-The main runner process doesn't run tests. It hands tests to workers and collects the results. In the experiment, two workers had different process IDs (`pid=1333`, `pid=1334`) and different browser instances.
+The main runner process doesn't run tests. It hands tests to workers and collects the results. In the experiment, two workers had different process IDs, and both were children of the runner process.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#worker-processes), and checked by running the code.
 
 **Do tests run in parallel, or do workers?**
 **Workers run in parallel. Inside a worker, tests run one after another.** "Parallel tests" really means tests spread across several workers. With 3 workers, at most 3 tests run at the same moment.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#worker-processes), and checked by running the code.
 
 **How many workers does Playwright start if you don't set any?**
 **Half the machine's logical CPU cores** (`workers` defaults to `50%`). On the 2-core test machine that meant 1 worker, so everything ran in sequence. You can set it:
@@ -176,9 +176,9 @@ export default defineConfig({ workers: process.env.CI ? 2 : undefined });   // o
 npx playwright test --workers=4
 ```
 
-The config created by `npm init playwright` sets `workers: process.env.CI ? 1 : undefined`. That's safe but slow, so tune it to the size of your CI runner.
+The documentation recommends `workers: process.env.CI ? 1 : undefined` on CI for stability. That's safe but slow, so tune it to the size of your CI runner.
 
-Source: interview handbook, not checked against documentation.
+Source: [TestConfig](https://playwright.dev/docs/api/class-testconfig#test-config-workers), [Continuous Integration](https://playwright.dev/docs/ci#workers), and checked by running the code.
 
 **How is work split between workers by default?**
 By **file**. Different files run in parallel on different workers, but all the tests in one file run **in order, in the same worker**. From the experiment with 2 workers:
@@ -190,7 +190,7 @@ worker 1: b1 → b2 → b3        (all of file b)
 
 So one very large spec file becomes the bottleneck, however many workers you have.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel), and checked by running the code.
 
 **What does `fullyParallel` change?**
 It makes **individual tests** the unit of distribution instead of files. Any test from any file can go to any free worker:
@@ -206,7 +206,7 @@ The consequences are also common follow-up questions:
 - Tests must be **completely independent**. There's no guaranteed order, and no shared in-memory state even between tests in the same file.
 - **`beforeAll` runs in every worker that gets a test from that file.** In the experiment, `beforeAll` for file `a` ran **three times** (once per worker process), not once. Never put one-time global setup (such as seeding the database) in `beforeAll`. Use a setup project or `globalSetup` instead.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#parallelize-tests-in-a-single-file), and checked by running the code.
 
 **How do I run the tests within one file in parallel, without turning it on for everything?**
 ```ts
@@ -215,18 +215,18 @@ test.describe.configure({ mode: 'parallel' });   // at the top of the file, or i
 
 In the experiment, `e1` and `e2` from the same file ran at the same time in two different processes. The reverse works too: with `fullyParallel: true` globally, `test.describe.configure({ mode: 'default' })` makes one file run in order again.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#parallelize-tests-in-a-single-file), and checked by running the code.
 
 **How do I run tests serially?**
 There are three levels:
 
 - **Whole run in sequence:** `--workers=1` (or `workers: 1`).
-- **Tests that depend on each other**, in one file:test.describe.configure({ mode: 'serial' }); test('create order', …); test('pay order', …);      // depends on the previous test test('ship order', …);  Serial mode means: the tests run in order in one worker. **If one fails, the rest are skipped.** In the experiment, `c2` failed and `c3` "did not run". **On retry, the whole group reruns from the start.**
+- **Tests that depend on each other**, in one file: `test.describe.configure({ mode: 'serial' })` above `test('create order', …)`, `test('pay order', …)` and `test('ship order', …)`. Serial mode means: the tests run in order in one worker. **If one fails, the rest are skipped.** In the experiment, `c2` failed and `c3` "did not run". **On retry, the whole group reruns from the start.**
 - **Across projects:** `dependencies: ['setup']` runs the setup project first.
 
 Interview framing: serial mode is a code smell to use only as a last resort. Tests that depend on each other can't run in parallel, a single failure hides everything after it, and you can't run one test on its own. The better fix is to make each test create its own data (through the API) so it can run on its own.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#serial-mode), [Retries](https://playwright.dev/docs/test-retries#serial-mode), and checked by running the code.
 
 **What happens to a worker when a test fails?**
 Playwright **throws the worker away and starts a new one** for the remaining tests, so a broken page or browser state can't leak into later tests. In the experiment, `d1` failed on worker 0, and `d2` and `d3` then ran on **worker 1**, with worker fixtures torn down and set up again. That's why:
@@ -234,7 +234,7 @@ Playwright **throws the worker away and starts a new one** for the remaining tes
 - `test.info().workerIndex` is a unique ID per worker *process*, and it keeps increasing when workers restart;
 - `test.info().parallelIndex` is the stable *slot*, from `0` to `workers - 1` (it stayed `0` after the restart). Use `parallelIndex` to pick per-worker test accounts (`user-${parallelIndex}@test.io`), because it never goes beyond the number of workers.
 
-Source: interview handbook, not checked against documentation.
+Source: [Retries](https://playwright.dev/docs/test-retries#failures), [Parallelism](https://playwright.dev/docs/test-parallel#worker-index-and-parallel-index), and checked by running the code.
 
 **Worker vs browser context: why do we need both?**
 They solve different problems:
@@ -243,7 +243,7 @@ They solve different problems:
 | --- | --- | --- |
 | What it is | An OS process with its own browser | An isolated incognito-like session inside a browser |
 | Created | Once per worker (restarted after a failure) | **New for every test** by default |
-| Cost | Expensive: starting a browser takes seconds | Cheap: milliseconds |
+| Cost | Expensive: a process and a browser launch | Fast and cheap to create |
 | Purpose | **Speed** through parallelism | **Isolation**: separate cookies, localStorage, cache, permissions, viewport |
 
 In the experiment, all tests in one worker shared **one browser**, but every test got a **new context**. Neither alone would be enough:
@@ -253,7 +253,7 @@ In the experiment, all tests in one worker shared **one browser**, but every tes
 
 Playwright combines both: launch the browser once per worker (fast), and create a fresh context per test (isolated). That's also why two users in one test is simply two contexts in the same browser.
 
-Source: interview handbook, not checked against documentation.
+Source: [Isolation](https://playwright.dev/docs/browser-contexts), [Fixtures](https://playwright.dev/docs/api/class-fixtures#fixtures-browser), and checked by running the code.
 
 **Test scope vs worker scope?**
 ```ts
@@ -289,19 +289,19 @@ The rules interviewers want to hear:
 - Worker fixtures are shared, so they must **not hold per-test state**, or you get order-dependent flakiness.
 - Teardown runs in **reverse order** of setup, so a fixture can rely on its dependencies still existing during cleanup.
 
-Source: interview handbook, not checked against documentation.
+Source: [Fixtures](https://playwright.dev/docs/test-fixtures#worker-scoped-fixtures), and checked by running the code.
 
 **What other fixture options are there?**
-- **`{ auto: true }`:** runs for every test even if it isn't requested. Examples: attaching console errors, or starting a coverage collector.failOnConsoleErrors: [async ({ page }, use) => {   const errors: string[] = [];   page.on('console', m => m.type() === 'error' && errors.push(m.text()));   await use();   expect(errors, 'console errors').toEqual([]); }, { auto: true }],
+- **`{ auto: true }`:** runs for every test even if it isn't requested. Examples: attaching console errors, or starting a coverage collector. For example: `failOnConsoleErrors: [async ({ page }, use) => { const errors: string[] = []; page.on('console', m => m.type() === 'error' && errors.push(m.text())); await use(); expect(errors, 'console errors').toEqual([]); }, { auto: true }]`.
 - **Option fixtures (`{ option: true }`):** configurable values that each project can override with `use: { … }` in the config. An example is `locale` per project for German and English runs.
 - **`{ timeout: 60_000 }`:** gives a slow fixture its own timeout, separate from the test timeout.
 
-Source: interview handbook, not checked against documentation.
+Source: [Fixtures](https://playwright.dev/docs/test-fixtures#automatic-fixtures), and checked by running the code.
 
 **Workers vs sharding?**
-Workers are parallel processes on **one machine**. Sharding (`--shard=2/4`) splits the test list across **several machines or CI jobs**, and each shard still uses its own workers. Total parallelism is shards × workers per shard. Sharding splits by test when `fullyParallel` is on, and by file otherwise. Merge the per-shard `blob` reports with `npx playwright merge-reports`. See 7.2 for the GitHub Actions matrix.
+Workers are parallel processes on **one machine**. Sharding (`--shard=2/4`) splits the test list across **several machines or CI jobs**, and each shard still uses its own workers. Total parallelism is shards × workers per shard. Sharding splits by test when `fullyParallel` is on, and by file otherwise. Merge the per-shard `blob` reports with `npx playwright merge-reports`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Sharding](https://playwright.dev/docs/test-sharding), and checked by running the code.
 
 **How do you pick the number of workers?**
 Start with the number of CPU cores on the CI runner. Each worker runs a browser, so memory is usually the real limit. Measure and increase until run time stops improving or flakiness appears. Also check what the **system under test** can handle: 16 workers hitting a small staging database can cause the flakiness you're trying to avoid. Use `maxFailures` (`--max-failures=10`) to stop a clearly broken run early and save CI minutes.
@@ -317,4 +317,4 @@ Start with the number of CPU cores on the CI runner. Each worker runs a browser,
 - **Worker vs context:** the worker gives speed (one browser per process); the context gives isolation (fresh per test).
 - **Test vs worker scope:** set up per test, or once per worker and shared by its tests.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parallelism](https://playwright.dev/docs/test-parallel#limit-workers), [TestConfig](https://playwright.dev/docs/api/class-testconfig#test-config-workers)

@@ -94,74 +94,74 @@ Source: [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
 **Basic types?**
 `string, number, boolean, bigint, symbol, null, undefined, object, unknown, any, never, void`, arrays (`string[]` / `Array<string>`), tuples (`[string, number]`), enums (prefer union of string literals), literal types (`'GET' | 'POST'`).
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html), [TypeScript: Documentation - More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#other-types-to-know-about)
 
 **`any` vs `unknown` vs `never`?**
 `any` disables type checking, avoid; it silently spreads. `unknown` is the safe top type: you must narrow before use (ideal for parsed JSON or caught errors). `never` is the bottom type: functions that never return, exhausted unions, used in exhaustive `switch` checks.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown), [TypeScript: Documentation - Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#exhaustiveness-checking)
 
 **Type inference, when to annotate?**
 TS infers most local variables and return types. Annotate function parameters, public API/return types of shared helpers, and anything where inference would widen (e.g. `const method = 'GET'` infers `'GET'`, but `let method = 'GET'` infers `string`; use `as const` for literals).
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#literal-inference), and checked by running the code.
 
 **Optional (`?`), readonly, and index signatures?**
-`name?: string` → `string | undefined`. `readonly id: number` prevents reassignment. `[key: string]: unknown` allows arbitrary keys, use `Record<string, T>` instead where possible.
+`name?: string` → `string | undefined`. `readonly id: number` prevents reassignment. `[key: string]: unknown` allows arbitrary keys; `Record<string, T>` is a shorter way to write the same type.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Object Types](https://www.typescriptlang.org/docs/handbook/2/objects.html), and checked by running the code.
 
 **Union and intersection types, discriminated unions?**
-`A | B` either; `A & B` both. Discriminated union uses a literal "kind" field for safe narrowing:
+`A | B` either; `A & B` both. Discriminated union uses a shared field with literal types for safe narrowing:
 
 ```ts
 type ApiResult = { ok: true; data: User } | { ok: false; error: string };
 function handle(r: ApiResult) { if (r.ok) r.data; else r.error; }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html#discriminated-unions), and checked by running the code.
 
 **Type narrowing, list the mechanisms**
 `typeof`, `instanceof`, `in`, equality checks, truthiness, discriminated unions, user-defined type guards (`x is Foo`), assertion functions (`asserts x is Foo`). Essential for handling `unknown` API payloads and caught errors (`catch (e: unknown)`).
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Narrowing](https://www.typescriptlang.org/docs/handbook/2/narrowing.html)
 
 **Type assertions (`as`) vs type guards, when is `as` dangerous?**
 `as` tells the compiler to trust you with no runtime check; wrong assertions are silent bugs. Prefer guards or validation (zod) for external data. `as const` and `!` (non-null assertion) are the common acceptable uses, and `!` should be rare in test code.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)
 
 ### Advanced typing
 
 **`keyof`, indexed access types and mapped types?**
 `keyof User` = union of keys. `User['email']` = type of that property. Mapped: `{ [K in keyof T]?: T[K] }` is how `Partial` is built. Use them to type generic page-object helpers and config objects.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Keyof Type Operator](https://www.typescriptlang.org/docs/handbook/2/keyof-types.html), [TypeScript: Documentation - Indexed Access Types](https://www.typescriptlang.org/docs/handbook/2/indexed-access-types.html), [TypeScript: Documentation - Mapped Types](https://www.typescriptlang.org/docs/handbook/2/mapped-types.html)
 
 **Conditional types and `infer`?**
 `T extends U ? X : Y`. `infer` extracts types, e.g. `type ElementOf<T> = T extends (infer U)[] ? U : never`. Know they exist and what `Awaited` does; you rarely write them in test code.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Conditional Types](https://www.typescriptlang.org/docs/handbook/2/conditional-types.html#inferring-within-conditional-types), and checked by running the code.
 
 **Template literal types?**
-`type Route = `/api/${string}`;`, constrain strings by pattern. Useful for typed endpoints or test tags.
+``type Route = `/api/${string}`;`` constrains strings by pattern. Useful for typed endpoints or test tags.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Template Literal Types](https://www.typescriptlang.org/docs/handbook/2/template-literal-types.html), and checked by running the code.
 
 **Declaration merging and module augmentation, where does Playwright rely on it?**
-Adding to an existing interface from another file. Custom `expect` matchers extend Playwright's `Matchers` interface via `declare module`/`expect.extend` typing; custom fixtures are typed through `test.extend<{ ... }>()` generics rather than augmentation.
+Adding to an existing interface from another file. Playwright mostly avoids it: `expect.extend()` returns a new `expect` that is already typed with your custom matchers, and custom fixtures are typed through `test.extend<{ ... }>()` generics. The older way to type matchers was to add to the global `PlaywrightTest.Matchers` interface with `declare global`.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Declaration Merging](https://www.typescriptlang.org/docs/handbook/declaration-merging.html), [Assertions | Playwright](https://playwright.dev/docs/test-assertions#add-custom-matchers-using-expectextend)
 
 **What are `.d.ts` files and `@types/*` packages?**
 Type declaration files describe the types of JS libraries. DefinitelyTyped supplies `@types/node`, etc. Playwright ships its own types. If a library has no types you can write a minimal `declare module 'lib';`.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Type Declarations](https://www.typescriptlang.org/docs/handbook/2/type-declarations.html), [TypeScript: Documentation - TypeScript 2.0](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-0.html#shorthand-ambient-module-declarations)
 
 **Structural typing, what is it and what surprise does it cause?**
 TS compares shapes, not names ("duck typing"). Two unrelated interfaces with the same fields are interchangeable. Excess property checks only apply to object *literals*, so a wider object assigned via a variable is accepted.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Type Compatibility](https://www.typescriptlang.org/docs/handbook/type-compatibility.html)
 
 **How would you type test data builders?**
 ```ts
@@ -171,28 +171,28 @@ const buildUser = (overrides: Partial<User> = {}): User =>
 
 Combine with `satisfies` to check literal objects against a type without widening.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: Documentation - Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html#partialtype), and checked by running the code.
 
 ### Configuration and tooling
 
 **What does `tsconfig.json` control? Key options for a test repo?**
-`target`, `module`, `moduleResolution`, `strict` (always on), `esModuleInterop`, `resolveJsonModule`, `baseUrl`/`paths` for aliases like `@pages/*`, `include/exclude`, `types`. Playwright transpiles TS itself (no separate build needed), but type errors are only caught if you run `tsc --noEmit`, put that in CI.
+`target`, `module`, `moduleResolution`, `strict` (on by default since TypeScript 6.0, keep it on), `resolveJsonModule`, `paths` for aliases like `@pages/*` (`baseUrl` is deprecated in 6.0 and removed in 7.0), `include`/`exclude`, `types`. Playwright transpiles TS itself (no separate build needed), but type errors are only caught if you run `tsc --noEmit`, put that in CI.
 
-Source: interview handbook, not checked against documentation.
+Source: [TypeScript: TSConfig Reference - Docs on every TSConfig option](https://www.typescriptlang.org/tsconfig/), [TypeScript: Documentation - TypeScript 6.0](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-6-0.html), [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
 
 **How do TS errors differ from ESLint errors?**
 `tsc` checks types; ESLint checks patterns/style, and with `typescript-eslint` can use type info for rules like `no-floating-promises`, `no-misused-promises`, `await-thenable`. Both belong in CI.
 
-Source: interview handbook, not checked against documentation.
+Source: [Overview | typescript-eslint](https://typescript-eslint.io/rules/), [Best Practices | Playwright](https://playwright.dev/docs/best-practices#lint-your-tests)
 
 **How do you type environment variables and config safely?**
 Parse `process.env` once at startup into a typed object; validate with zod or manual checks; fail fast if missing. Never sprinkle `process.env.X!` across the code.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 ### TypeScript in Playwright
 
 **What is the risk of over-typing test code?**
 Complex generic gymnastics reduce readability and slow onboarding. Test code should be boring: explicit, small types, clear names. Type precision where it prevents real bugs (fixtures, data builders, API contracts), simplicity elsewhere.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.

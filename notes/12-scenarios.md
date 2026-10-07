@@ -149,32 +149,32 @@ Source: experience, not documentation.
 **You join a team with 800 flaky Selenium tests taking 3 hours. What do you do in the first 90 days?**
 Weeks 1–2: measure (pass rate, flaky rate, duration per test, coverage of critical flows), talk to devs/product, identify top-value journeys. Weeks 3–6: quarantine flaky tests, define a smoke suite (<15 min) that gates PRs, stabilise infra (Docker, parallelism). Weeks 7–12: pilot Playwright on the highest-value area, move data setup to API, delete redundant tests, establish ownership and a flaky-test SLA, publish dashboards. Communicate trade-offs and progress regularly.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you convince developers to write testable code / add test IDs?**
 Show the cost (flaky-test time, escaped defects), make it easy (lint rule, component library defaults), pair on it, include in DoD, celebrate wins; frame as shared ownership of quality, not QA's demand.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you estimate testing effort for a feature?**
 Break into test conditions by risk; estimate design, data, automation, exploratory, regression impact; add environment/dependency risk; give a range and assumptions; refine after refinement sessions.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How do you measure the quality of your test automation?**
 Defect detection (bugs found pre-prod vs escaped), flaky rate, execution time, maintenance effort per sprint, coverage of critical journeys and risks, mean time to diagnose a failure (traces!), team adoption (do devs run it?).
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **Performance and security, what do you cover as an SDET?**
-Performance: k6/JMeter/Artillery on critical APIs, budgets in CI, Lighthouse for web vitals; interpret P95/P99, throughput, error rate under load. Security: OWASP Top 10 awareness, ZAP baseline scans in CI, dependency scanning, auth/authorisation test cases (IDOR, role escalation), secrets hygiene. Know your limits and when to bring in specialists.
+Performance: k6/JMeter/Artillery on critical APIs, budgets in CI, Lighthouse for page performance metrics (LCP, CLS, TBT); interpret P95/P99, throughput, error rate under load. Security: OWASP Top 10 awareness, ZAP baseline scans in CI (passive only, no attacks), dependency scanning, auth/authorisation test cases (IDOR, role escalation), secrets hygiene. Know your limits and when to bring in specialists.
 
-Source: interview handbook, not checked against documentation.
+Source: [ZAP - Baseline Scan](https://www.zaproxy.org/docs/docker/baseline-scan/), [Lighthouse performance scoring | Chrome for Developers](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring), [OWASP Top 10 | OWASP Foundation](https://owasp.org/www-project-top-ten/)
 
 **Mobile? Non-functional? Accessibility? Localisation?**
 Have one paragraph each: Appium/Detox vs. emulation; NFR checklists; axe + manual keyboard/screen-reader checks + WCAG 2.2 AA; locale/time zone/currency/RTL tests with data-driven runs (for example `de-DE` formats, umlauts, GDPR).
 
-Source: interview handbook, not checked against documentation.
+Source: [Web Content Accessibility Guidelines (WCAG) 2.2](https://www.w3.org/TR/WCAG22/)
 
 ### How would you test...?
 
@@ -190,24 +190,24 @@ For any "how would you test X" question, follow the same structure so you never 
 **How would you test a search feature?**
 Exact, partial and no match; case; umlauts (`Müller` vs `Mueller`); special characters and injection; empty query; very long queries; typos and suggestions; filters and sorting combined; pagination; response time with large data; debounce (no request on every keystroke); results respect permissions.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How would you test a file upload?**
 Allowed and disallowed types (check the content, not just the extension); size limit and the 0-byte case; name with spaces, umlauts or path traversal; duplicates; interrupted upload; virus scan; several files in parallel; progress bar; downloading back and comparing checksums.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How would you test a REST endpoint such as `POST /orders`?**
 The usual categories of API test cases (see the API testing note), plus idempotency, concurrency (two orders for the last item in stock), a downstream payment failure (the order must not be left half-created), and events or emails fired exactly once.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **How would you test a scheduling feature?**
-Time zones, including users in two different zones; daylight-saving switch days (the last Sundays of March and October, when a shift can be 23 or 25 hours); overlapping shifts; shifts over midnight; leap years; regional public holidays; one person assigned twice; concurrent edits by two managers; notifications at the right local time; large rosters (performance); and generation jobs running through async tasks (retries, idempotency).
+Time zones, including users in two different zones; daylight-saving switch days (in the EU the last Sundays of March and October; other regions use other dates), when a day is 23 or 25 hours long and a night shift is an hour shorter or longer; overlapping shifts; shifts over midnight; leap years; regional public holidays; one person assigned twice; concurrent edits by two managers; notifications at the right local time; large rosters (performance); and generation jobs running through async tasks (retries, idempotency).
 
-Source: interview handbook, not checked against documentation.
+Source: [Directive 2000/84/EC on summer-time arrangements](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32000L0084)
 
 **How would you test a pen, a lift or a vending machine?**
 Use the same structure: clarify → functional → boundaries → non-functional (durability, safety, accessibility) → edge cases. Interviewers are testing your structure, not your knowledge of pens.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.

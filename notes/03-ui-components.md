@@ -87,12 +87,12 @@ await loc.setInputFiles('file.pdf');
 await loc.scrollIntoViewIfNeeded();
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Actions](https://playwright.dev/docs/input), and checked by running the code.
 
 **`fill` vs `pressSequentially` vs `type`?**
-`fill` sets the whole value and fires one `input` event: fast, and right for almost every field. `pressSequentially` sends keydown/keypress/keyup per character: use it when the page reacts to each keystroke (autocomplete, input masks, a search that fires on typing). `type()` is deprecated in favour of these two.
+`fill` sets the whole value and fires one `input` event: fast, and right for almost every field. `pressSequentially` sends keydown, keypress/input and keyup per character: use it when the page reacts to each keystroke (autocomplete, input masks, a search that fires on typing). `type()` is deprecated in favour of these two.
 
-Source: interview handbook, not checked against documentation.
+Source: [Actions](https://playwright.dev/docs/input#type-characters), [Locator](https://playwright.dev/docs/api/class-locator#locator-type), and checked by running the code.
 
 ### Hands-on tasks
 
@@ -107,7 +107,7 @@ await expect(page.locator('#selected')).toHaveText('Editing Ben');
 
 Scope the locator to the row. Never use a hard-coded index like `nth(1)`, because it breaks as soon as the sort order changes.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#filter-by-text), and checked by running the code.
 
 **Hands-on: web table: read a column, count rows, filter by another column**
 ```ts
@@ -129,7 +129,7 @@ expect(active).toEqual(['Anna', 'Chen']);
 
 A common follow-up is "check that the table is sorted by name". Read the column, then compare it with a sorted copy: `expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b)))`.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Hands-on: dropdowns and checkboxes**
 ```ts
@@ -143,7 +143,7 @@ await expect(page.getByLabel('Accept terms')).toBeChecked();
 
 `selectOption` only works on a native `<select>`. A custom dropdown (a React or Material component) is a button that opens a list. Click it, then use `getByRole('option', { name: 'India' }).click()`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Actions](https://playwright.dev/docs/input#select-options), and checked by running the code.
 
 **Hands-on: shadow DOM**
 Playwright locators go inside **open** shadow roots automatically, so you don't need special syntax:
@@ -153,9 +153,9 @@ await page.getByRole('button', { name: 'Follow' }).click();   // the button is i
 await expect(page.locator('user-card .state')).toHaveText('Following');
 ```
 
-XPath does *not* reach into shadow DOM, and closed shadow roots can't be reached at all. Selenium needs `getShadowRoot()` and WebdriverIO needs `shadow$()`. This makes a good comparison point in an interview.
+XPath does *not* reach into shadow DOM, and closed shadow roots can't be reached at all. Selenium needs `getShadowRoot()`. Current WebdriverIO also pierces shadow roots with `$`, and `shadow$()` is only needed where WebDriver BiDi is not supported. This makes a good comparison point in an interview.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#locate-in-shadow-dom), [Finding web elements](https://www.selenium.dev/documentation/webdriver/elements/finders/), [shadow$](https://webdriver.io/docs/api/element/shadow$), and checked by running the code.
 
 **Hands-on: data-driven (parameterised) tests**
 Generate one test per data row so that each shows up and fails separately in the report:
@@ -178,11 +178,12 @@ for (const { term, expected } of searches) {
 
 Data can come from a JSON file (`import data from './data/search.json'`) or a CSV parsed at the top of the file with `fs.readFileSync` plus a CSV parser. The test titles must be unique. Don't loop *inside* a single test: the first failure stops the loop, and you lose the other results.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parameterize tests](https://playwright.dev/docs/test-parameterize#parameterized-tests), and checked by running the code.
 
 **Hands-on: run against different environments**
 ```ts
 // playwright.config.ts
+import { defineConfig } from '@playwright/test';
 import dotenv from 'dotenv';
 dotenv.config({ path: `.env.${process.env.TEST_ENV ?? 'staging'}` });
 export default defineConfig({ use: { baseURL: process.env.BASE_URL } });
@@ -191,7 +192,7 @@ export default defineConfig({ use: { baseURL: process.env.BASE_URL } });
 
 Keep secrets in CI variables, not in committed `.env` files.
 
-Source: interview handbook, not checked against documentation.
+Source: [Parameterize tests](https://playwright.dev/docs/test-parameterize#env-files)
 
 **Hands-on: control time**
 (banners, expiry, "today" labels, countdowns):
@@ -203,7 +204,7 @@ await expect(page.locator('#today')).toHaveText('Today: 2026-12-24');
 // page.clock.install() + page.clock.fastForward('05:00') to skip 5 minutes of timers
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Clock](https://playwright.dev/docs/clock), and checked by running the code.
 
 **Hands-on: seed localStorage or cookies before the app starts**
 ```ts
@@ -213,7 +214,7 @@ await context.addCookies([{ name: 'consent', value: 'yes', url: 'https://app.exa
 
 Use this to skip cookie banners and onboarding, or to test feature flags.
 
-Source: interview handbook, not checked against documentation.
+Source: [Page](https://playwright.dev/docs/api/class-page#page-add-init-script), [BrowserContext](https://playwright.dev/docs/api/class-browsercontext#browser-context-add-cookies), and checked by running the code.
 
 **Hands-on: two users in one test**
 (for chat, approvals, or permissions):
@@ -226,7 +227,7 @@ const viewer = await viewerCtx.newPage();
 // admin publishes → viewer sees it; each context has separate cookies and storage
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Authentication](https://playwright.dev/docs/auth#testing-multiple-roles-together), and checked by running the code.
 
 **Hands-on: mock a response to force an edge case, and wait for a specific call**
 ```ts
@@ -240,7 +241,7 @@ expect(response.status()).toBe(200);
 
 Why `Promise.all`? If you click first and wait afterwards, the response can arrive before you start listening, and the test hangs until it times out.
 
-Source: interview handbook, not checked against documentation.
+Source: [Mock APIs](https://playwright.dev/docs/mock#mock-api-requests), [Network](https://playwright.dev/docs/network#network-events), and checked by running the code.
 
 **Hands-on: hover menus, keyboard, infinite scroll, permissions, console errors, broken links, WebSockets**
 - **Hover menu:** `await page.getByRole('menuitem', { name: 'Account' }).hover()`, then click the item underneath.
@@ -251,4 +252,4 @@ Source: interview handbook, not checked against documentation.
 - **Broken links:** collect `href`s with `locator('a').evaluateAll(as => as.map(a => (a as HTMLAnchorElement).href))`, then call `request.head(url)` on each and assert the status is below 400.
 - **WebSockets:** listen with `page.on('websocket', ws => ws.on('framereceived', f => …))`, or mock them with `page.routeWebSocket()`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Emulation](https://playwright.dev/docs/emulation#geolocation), [Network](https://playwright.dev/docs/network#websockets), and checked by running the code.

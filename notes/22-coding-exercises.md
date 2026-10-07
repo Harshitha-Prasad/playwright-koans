@@ -19,13 +19,13 @@ If you recognise which pattern a question uses, you can solve questions you've n
 
 | Pattern | What it looks like | Used in |
 | --- | --- | --- |
-| **Frequency map** (`Map`/object counter) | "count", "most frequent", "first unique", "duplicates", "anagram" | word count, char count, first non-repeating, anagram, duplicate emails |
+| **Frequency map** (`Map`/object counter) | "count", "most frequent", "first unique", "anagram" | word count, char count, first non-repeating, most frequent, anagram |
 | **Two pointers** | "in place", "sorted arrays", "reverse", "palindrome", "partition" | merging sorted arrays, evens before odds, palindrome, reverse in place |
-| **Running max / min** | "largest", "second largest", "without sort" | second largest, min/max |
-| **Set for lookups** | "unique", "intersection", "seen before" | remove duplicates, two sum, intersection |
+| **Running max / min** | "largest", "second largest", "without sort", "maximum subarray" | second largest, min/max, Kadane |
+| **Set or Map for lookups** | "unique", "duplicates", "intersection", "seen before" | remove duplicates, duplicate emails, two sum, intersection |
 | **Carry / digit maths** | `% 10`, `Math.floor(x / 10)` | add one to a digit array, reverse number, sum of digits |
 | **Stack** | "brackets", "undo", "nested" | balanced brackets |
-| **Sliding window** | "longest substring", "subarray" | longest unique substring, Kadane |
+| **Sliding window** | "longest substring", "subarray" | longest unique substring |
 | **Reduce into an accumulator** | "group", "sum", "count by" | groupBy, status codes, prices |
 
 ## JavaScript mistakes interviewers look for
@@ -131,7 +131,7 @@ secondLargestNumberInString('abc12def45gh7'); // 12
 Complexity: (a) is O(n) time and O(1) space. (b) is O(n + k log k), where k is how many numbers are found.
 Follow-ups: "What if there are no digits?" (return `null` rather than crashing) and "What about duplicate values?" (the `d < first` check handles them).
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Count how many times each word appears in a sentence and print each word with its count**
 ```ts
@@ -163,7 +163,7 @@ Points to mention:
 - A `Map` keeps words in the order they first appear. A plain object also works:
 
 ```ts
-const counts: Record<string, number> = {};
+const counts: Record<string, number> = Object.create(null); // with {} the word "constructor" finds an inherited property
 for (const w of words) counts[w] = (counts[w] ?? 0) + 1;
 ```
 
@@ -171,7 +171,7 @@ for (const w of words) counts[w] = (counts[w] ?? 0) + 1;
 
 Complexity: O(n) time and O(k) space, where k is the number of unique words.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Merge two arrays**
 Ask first: are duplicates allowed, and are the inputs sorted? The answer decides which version you write.
@@ -205,7 +205,7 @@ mergeSorted([1, 4, 7], [2, 3, 8, 9]); // [1, 2, 3, 4, 7, 8, 9]
 
 Complexity: all versions are O(n + m). Calling `[...a, ...b].sort()` instead would be O((n+m) log(n+m)), and plain `sort()` without a comparator orders numbers as strings: `[10, 9].sort()` gives `[10, 9]`. Interviewers often check whether you know this.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Rearrange an array so that all even numbers come first, followed by the odd numbers**
 ```ts
@@ -229,7 +229,7 @@ evensFirstInPlace([1, 2, 3, 4, 5, 6]); // [6, 2, 4, 3, 5, 1]
 
 Say which version you are writing and why: "The filter version is stable and easy to read. The two-pointer version uses no extra memory." Use `n % 2 !== 0` to test for odd numbers, not `n % 2 === 1`, because in JavaScript `-3 % 2` is `-1`.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Add one to a number stored as an array of digits: `[1,2,9]` → `[1,3,0]`**
 (This is the classic "plus one" problem. The expected result is `[1, 3, 0]`, because 129 + 1 = 130.)
@@ -251,7 +251,7 @@ plusOne([1, 2, 3]); // [1, 2, 4]
 Why not use `Number(digits.join('')) + 1`? It fails for long arrays because numbers above `Number.MAX_SAFE_INTEGER` (about 9 × 10¹⁵) lose precision. Mention this in the interview; it shows you think about edge cases. (`BigInt` avoids the problem, but the digit loop is the answer interviewers expect.)
 Complexity: O(n) time. A variation to be ready for: "add any number k", which uses the same carry logic.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 ### Strings
 
@@ -267,7 +267,7 @@ function reverseString(s: string): string {
 // Built-in version: [...s].reverse().join('')
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Palindrome check**
 (ignoring case and punctuation, two pointers)
@@ -282,7 +282,7 @@ function isPalindrome(s: string): boolean {
 isPalindrome('A man, a plan, a canal: Panama'); // true
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Reverse the word order / reverse each word**
 ```ts
@@ -292,7 +292,7 @@ const reverseEachWord = (s: string) => s.split(' ').map(w => [...w].reverse().jo
 // 'I love testing' → 'I evol gnitset'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Count occurrences of each character**
 ```ts
@@ -304,7 +304,7 @@ function charCount(s: string): Record<string, number> {
 charCount('hello'); // { h: 1, e: 1, l: 2, o: 1 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **First non-repeating character**
 (count first, then find)
@@ -318,7 +318,7 @@ function firstNonRepeatingChar(s: string): string | null {
 firstNonRepeatingChar('swiss'); // 'w'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Most frequent character**
 ```ts
@@ -330,7 +330,7 @@ function mostFrequentChar(s: string): string | null {
 mostFrequentChar('mississippi'); // 'i'  (i and s both appear 4 times; the first one found wins)
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Count vowels and consonants**
 ```ts
@@ -345,7 +345,7 @@ function countVowelsConsonants(s: string) {
 countVowelsConsonants('Playwright!'); // { vowels: 2, consonants: 8 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Anagram check**
 (O(n) with counts, instead of sorting both strings)
@@ -363,7 +363,7 @@ function isAnagram(a: string, b: string): boolean {
 isAnagram('Listen', 'Silent'); // true
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Sum of the digits in a string**
 ```ts
@@ -372,7 +372,7 @@ const sumOfDigitsInString = (s: string) =>
 sumOfDigitsInString('claude2403edulac'); // 9
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Remove duplicate characters**
 ```ts
@@ -380,7 +380,7 @@ const removeDuplicateChars = (s: string) => [...new Set(s)].join('');
 removeDuplicateChars('programming'); // 'progamin'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Capitalise the first letter of each word**
 ```ts
@@ -389,7 +389,7 @@ const capitalizeWords = (s: string) =>
 capitalizeWords('hello wORLD from qa'); // 'Hello World From Qa'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Longest word in a sentence**
 ```ts
@@ -398,7 +398,7 @@ const longestWord = (s: string) =>
 longestWord('I automate with playwright daily'); // 'playwright'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Swap case**
 ```ts
@@ -407,7 +407,7 @@ const swapCase = (s: string) =>
 swapCase('HeLLo'); // 'hEllO'
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **String compression**
 ,  `"aaabbc"` → `"a3b2c1"`
@@ -425,7 +425,7 @@ function compress(s: string): string {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Balanced brackets**
 (uses a stack; a common question at intermediate level)
@@ -444,7 +444,7 @@ isBalanced('{[()]}'); // true
 isBalanced('{[(])}'); // false
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Longest substring without repeating characters**
 (sliding window)
@@ -464,7 +464,7 @@ function longestUniqueSubstring(s: string): number {
 longestUniqueSubstring('abcabcbb'); // 3 ('abc')
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 ### Arrays
 
@@ -478,7 +478,7 @@ function minMax(arr: number[]) {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Second largest in an array**
 (single pass; handles duplicates)
@@ -495,7 +495,7 @@ function secondLargest(arr: number[]): number | null {
 secondLargest([10, 5, 10, 8]); // 8   (the common wrong answer is 10)
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Remove duplicates / find duplicates**
 ```ts
@@ -515,7 +515,7 @@ function findDuplicates<T>(arr: T[]): T[] {
 findDuplicates([1, 2, 2, 3, 1, 1]); // [2, 1]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Missing number in 1..n**
 (using the sum formula)
@@ -526,7 +526,7 @@ const missingNumber = (arr: number[], n: number) =>
 missingNumber([1, 2, 4, 5], 5); // 3
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Two sum**
 ,  find the indices of two numbers that add up to a target (hash map, O(n))
@@ -544,7 +544,7 @@ function twoSum(nums: number[], target: number): [number, number] | null {
 twoSum([2, 7, 11, 15], 9); // [0, 1]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **All unique pairs with a given sum**
 ```ts
@@ -561,7 +561,7 @@ function pairsWithSum(arr: number[], target: number): [number, number][] {
 pairsWithSum([1, 5, 7, -1, 5], 6); // [[1, 5], [-1, 7]]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Rotate an array right by k positions**
 ```ts
@@ -574,7 +574,7 @@ function rotateRight<T>(arr: T[], k: number): T[] {
 rotateRight([1, 2, 3, 4, 5], 2); // [4, 5, 1, 2, 3]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Move zeros to the end**
 (in place, keeping the order of the other numbers)
@@ -589,7 +589,7 @@ function moveZerosToEnd(arr: number[]): number[] {
 moveZerosToEnd([0, 1, 0, 3, 12]); // [1, 3, 12, 0, 0]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Intersection, union and difference**
 ```ts
@@ -600,7 +600,7 @@ const difference   = <T>(a: T[], b: T[]) => { const sb = new Set(b); return a.fi
 
 Why use a `Set` for lookups? `b.includes(x)` inside a filter is O(n·m); a `Set` lookup makes it O(n + m).
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Flatten a nested array**
 (recursion; the built-in is `arr.flat(Infinity)`)
@@ -614,7 +614,7 @@ function flatten(arr: unknown[]): unknown[] {
 flatten([1, [2, [3, [4]]], 5]); // [1, 2, 3, 4, 5]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Split an array into chunks**
 (useful for batching API calls in tests)
@@ -628,7 +628,7 @@ function chunk<T>(arr: T[], size: number): T[][] {
 chunk([1, 2, 3, 4, 5], 2); // [[1, 2], [3, 4], [5]]
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Most frequent element**
 ```ts
@@ -644,7 +644,7 @@ function mostFrequent<T>(arr: T[]): T | null {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Reverse an array in place**
 (swap from both ends)
@@ -656,7 +656,7 @@ function reverseInPlace<T>(arr: T[]): T[] {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Sort without `sort()`**
 (bubble sort, stopping early once the array is sorted)
@@ -677,7 +677,7 @@ function bubbleSort(input: number[]): number[] {
 
 Know the key facts: bubble sort is O(n²). The built-in `Array.prototype.sort` is O(n log n) and stable. Without a comparator it sorts numbers as strings, so use `arr.sort((a, b) => a - b)`.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Maximum subarray sum**
 (Kadane's algorithm)
@@ -694,7 +694,7 @@ function maxSubarraySum(arr: number[]): number {
 maxSubarraySum([-2, 1, -3, 4, -1, 2, 1, -5, 4]); // 6  ([4, -1, 2, 1])
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 ### Test-automation style
 
@@ -716,7 +716,7 @@ function duplicateEmails(users: User[]): string[] {
 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Group objects by a key**
 ```ts
@@ -724,13 +724,13 @@ function groupBy<T, K extends PropertyKey>(items: T[], key: (item: T) => K): Rec
   return items.reduce((acc, item) => {
     (acc[key(item)] ??= []).push(item);
     return acc;
-  }, {} as Record<K, T[]>);
+  }, Object.create(null) as Record<K, T[]>);   // no inherited keys, so a key like 'constructor' is safe
 }
 groupBy(users, u => u.name);
 // Node 21+ has a built-in version: Object.groupBy(users, u => u.name)
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Object.groupBy() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/groupBy), and checked by running the code.
 
 **Sort by two fields**
 (name ascending, then age descending)
@@ -741,7 +741,7 @@ const sorted = [...users].sort((a, b) => a.name.localeCompare(b.name) || b.age -
 
 Use `localeCompare` for strings. It also sorts German umlauts correctly with `localeCompare(b, 'de')`.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Count status codes by family from a log array**
 ```ts
@@ -756,7 +756,7 @@ countStatusCodes([{ status: 200 }, { status: 201 }, { status: 404 }, { status: 5
 // { '2xx': 2, '4xx': 1, '5xx': 1 }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Extract prices from page text and total them**
 (handles the German decimal comma)
@@ -772,7 +772,7 @@ sumPrices('Item A €12.50, item B €7,25, shipping 3'); // 22.75
 
 A typical follow-up: "How would you check the cart total in Playwright?" Read the line items with `locator.allTextContents()`, sum them with this function, and assert with `await expect(totalLocator).toHaveText(...)`. Mention the floating-point pitfall: compare amounts in cents or round them.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Deep equality of two objects**
 (recursive)
@@ -784,13 +784,13 @@ function deepEqual(a: unknown, b: unknown): boolean {
   if (Array.isArray(a) !== Array.isArray(b)) return false;
   const ka = Object.keys(a), kb = Object.keys(b);
   if (ka.length !== kb.length) return false;
-  return ka.every(k => deepEqual((a as any)[k], (b as any)[k]));
+  return ka.every(k => kb.includes(k) && deepEqual((a as any)[k], (b as any)[k])); // same keys, not only the same number of keys
 }
 ```
 
 Limitations to mention: it doesn't handle Dates, Maps, Sets or circular references. In real tests, use `expect(a).toEqual(b)`.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Parse a URL's query string into an object**
 ```ts
@@ -798,7 +798,7 @@ const parseQuery = (url: string) => Object.fromEntries(new URL(url).searchParams
 parseQuery('https://shop.io/search?q=shoes&page=2'); // { q: 'shoes', page: '2' }
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Swap an object's keys and values**
 ```ts
@@ -806,4 +806,4 @@ const invertObject = (obj: Record<string, string>) =>
   Object.fromEntries(Object.entries(obj).map(([k, v]) => [v, k]));
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.

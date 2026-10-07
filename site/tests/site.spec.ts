@@ -163,6 +163,9 @@ test.describe('Playground: locators', () => {
       await page.getByRole('navigation', { name: 'Challenges' }).getByRole('button', { name: challenge.title, exact: true }).click();
       await page.getByRole('button', { name: 'Show the HTML' }).click();
       await expect(page.locator('.pg-html-line.target').first(), challenge.id).toBeVisible();
+      // Long lines of HTML scroll inside their box. They must not widen the column under the practice page.
+      const overflow = await page.locator('.pg-work').evaluate((work) => work.scrollWidth - work.clientWidth);
+      expect(overflow, `${challenge.id}: the answer column overflows`).toBeLessThanOrEqual(0);
 
       const line = page.locator('.pg-roles > li').first();
       const role = await line.getAttribute('data-role');
@@ -602,7 +605,7 @@ test('question cards on a note open one by one or all at once, and cite a source
   await expect(page.getByRole('button', { name: 'Close all' })).toBeVisible();
 });
 
-test('a note groups its extra questions under headings, and says which answers are unchecked', async ({ page }) => {
+test('a note groups its extra questions under headings, and every answer names its source', async ({ page }) => {
   await page.goto('note-12.html');
 
   const group = page.locator('section.qa-group').filter({ has: page.getByRole('heading', { name: /^How would you test/ }) });
@@ -615,7 +618,7 @@ test('a note groups its extra questions under headings, and says which answers a
 
   const card = group.locator('details.qa').filter({ hasText: 'How would you test a search feature?' });
   await card.locator('summary').click();
-  await expect(card.locator('.qa-answer')).toContainText('Source: interview handbook, not checked against documentation.');
+  await expect(card.locator('.qa-answer')).toContainText(/Source: .+/);
 });
 
 test('the theme switch is remembered', async ({ page }) => {
@@ -642,5 +645,5 @@ test('the interviewer prompt can be copied', async ({ page, context }) => {
 test('old Locator Gym links lead to the playground', async ({ page }) => {
   await page.goto('locators.html');
   await expect(page).toHaveURL(/playground\.html$/);
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Playground');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Playwright playground');
 });

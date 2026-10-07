@@ -67,7 +67,7 @@ Source: [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
 **Is JavaScript single-threaded? Then how is it asynchronous?**
 The main thread runs one call stack. Async work (timers, I/O, network) is delegated to the runtime (browser/libuv); completions are queued and processed by the **event loop** when the stack is empty. Concurrency without parallelism (Worker threads aside).
 
-Source: interview handbook, not checked against documentation.
+Source: [JavaScript execution model - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model), [The Node.js Event Loop | Node.js](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
 
 **Explain the event loop, macrotasks and microtasks**
 Macrotask queue: `setTimeout`, `setInterval`, I/O, UI events. Microtask queue: promise callbacks, `queueMicrotask`, `MutationObserver`. After each macrotask, *all* microtasks run before the next macrotask. Classic quiz:
@@ -79,32 +79,32 @@ Promise.resolve().then(() => console.log('c'));
 console.log('d');   // a d c b
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Using microtasks in JavaScript with queueMicrotask() - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide), and checked by running the code.
 
 **What is a Promise? States?**
 An object representing a future value. States: pending → fulfilled (resolved with value) or rejected (with reason). Once settled it cannot change. `.then`, `.catch`, `.finally` chain and return new promises.
 
-Source: interview handbook, not checked against documentation.
+Source: [Promise - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise)
 
 **Promise chaining vs nesting, why chain?**
 Chaining returns promises from `.then` to flatten; nesting recreates callback hell and loses error propagation. A rejected promise skips to the next `.catch`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Using promises - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Using_promises)
 
 **`async`/`await`, what does it compile down to?**
 Syntax over promises. `async` functions always return a promise. `await` pauses the function (not the thread) until the promise settles, resuming in a microtask. Errors become exceptions catchable with `try/catch`.
 
-Source: interview handbook, not checked against documentation.
+Source: [async function - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function), [await - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/await)
 
 **Sequential vs parallel async in a loop?**
 `forEach` does not await callbacks, use `for...of` with `await` for sequential, or `Promise.all(items.map(async ...))` for parallel. Know when parallel is unsafe (rate limits, shared state).
 
-Source: interview handbook, not checked against documentation.
+Source: [Array.prototype.forEach() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach), and checked by running the code.
 
 **How does error handling work across async boundaries?**
 Errors inside an `async` function reject its promise. Errors in a callback passed to `setTimeout` are *not* caught by a surrounding `try/catch`. `unhandledrejection` events / Node's `process.on('unhandledRejection')` are the last resort. In tests: always `await` and let the runner catch; wrap only where you need custom messages.
 
-Source: interview handbook, not checked against documentation.
+Source: [Window: unhandledrejection event - Web APIs | MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/unhandledrejection_event), [Process | Node.js documentation](https://nodejs.org/api/process.html#event-unhandledrejection), and checked by running the code.
 
 **Write a retry helper with exponential backoff**
 ```js
@@ -112,7 +112,8 @@ async function retry(fn, { attempts = 3, baseMs = 200 } = {}) {
   let lastErr;
   for (let i = 0; i < attempts; i++) {
     try { return await fn(); }
-    catch (err) { lastErr = err; await new Promise(r => setTimeout(r, baseMs * 2 ** i)); }
+    catch (err) { lastErr = err; }
+    if (i < attempts - 1) await new Promise(r => setTimeout(r, baseMs * 2 ** i));
   }
   throw lastErr;
 }
@@ -120,7 +121,7 @@ async function retry(fn, { attempts = 3, baseMs = 200 } = {}) {
 
 Follow-up: when is retrying *wrong*? (Hiding real flakiness; non-idempotent operations.)
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Write a debounce or a simple `sleep`/timeout wrapper**
 ```js
@@ -131,4 +132,4 @@ const withTimeout = (p, ms) =>
 
 Then explain why hard sleeps are an anti-pattern in Playwright (auto-waiting, `expect.poll`, `waitForResponse`).
 
-Source: interview handbook, not checked against documentation.
+Source: [Page | Playwright](https://playwright.dev/docs/api/class-page#page-wait-for-timeout), and checked by running the code.

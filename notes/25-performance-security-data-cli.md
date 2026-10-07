@@ -9,7 +9,7 @@ Expect to be asked to debug a CI runner or a container:
 ```bash
 ls -la; cd; pwd; cat / less / tail -f app.log     # navigate, read logs, follow a log live
 grep -rn "ERROR" logs/ | head                     # search
-grep -c "status=500" access.log                   # count matches
+grep -c "status=500" access.log                   # count matching lines
 ps aux | grep node; kill <pid>                    # processes
 lsof -i :3000                                     # what is using the port
 df -h; du -sh node_modules                        # disk space
@@ -30,15 +30,14 @@ Pipes (`|`), redirects (`>`, `>>`, `2>&1`) and exit codes (`echo $?`: a non-zero
 - **Stress:** beyond expected traffic, to find the breaking point and see how the system fails.
 - **Spike:** a sudden surge of traffic.
 - **Soak / endurance:** a long run to find memory leaks and slow degradation.
-- **Scalability:** does adding instances add capacity?
-- **Volume:** large amounts of data.
+- **Scalability:** can the system grow (more users, more data, more instances) and still meet its targets?
 
-Source: interview handbook, not checked against documentation.
+Source: [Load test types | Grafana k6 documentation](https://grafana.com/docs/k6/latest/testing-guides/test-types/), [ISTQB Certified Tester Performance Testing syllabus](https://istqb.org/wp-content/uploads/2024/11/ISTQB-CT-PT_Syllabus_v1.0_2018.pdf)
 
 **Key metrics**
-Response time at **P50/P95/P99** (never just the average, because averages hide slow outliers), throughput (requests per second), error rate, concurrent users, and resource use (CPU, memory, DB connections). On Cloud Run, also watch cold starts and instance count.
+Response time at **P50/P95/P99** (never just the average, because averages hide slow outliers), throughput (requests per second), error rate, concurrent users, and resource use (CPU, memory, DB connections). On Cloud Run, also watch container startup latency (cold starts) and instance count.
 
-Source: interview handbook, not checked against documentation.
+Source: [Built-in metrics | Grafana k6 documentation](https://grafana.com/docs/k6/latest/using-k6/metrics/reference/), [Monitor Health and Performance | Cloud Run](https://docs.cloud.google.com/run/docs/monitoring)
 
 **A k6 script**
 k6 scripts are JavaScript, so they fit a Playwright team:
@@ -67,9 +66,9 @@ export default function () {
 // k6 run -e BASE_URL=https://staging.example.com load.js
 ```
 
-Other tools to name: JMeter (GUI, widely used), Gatling, Artillery, and Locust (Python). **Lighthouse** covers front-end performance (Core Web Vitals: LCP, INP, CLS).
+Other tools to name: JMeter (GUI, widely used), Gatling, Artillery, and Locust (Python). **Lighthouse** covers front-end performance in the lab. The Core Web Vitals are LCP, INP and CLS; Lighthouse measures LCP and CLS, but INP needs real user input, so it reports Total Blocking Time as a proxy.
 
-Source: interview handbook, not checked against documentation.
+Source: [Thresholds | Grafana k6 documentation](https://grafana.com/docs/k6/latest/using-k6/thresholds/), [Options reference | Grafana k6 documentation](https://grafana.com/docs/k6/latest/using-k6/k6-options/reference/), [Checks | Grafana k6 documentation](https://grafana.com/docs/k6/latest/using-k6/checks/), [Web Vitals | web.dev](https://web.dev/articles/vitals)
 
 **How do you run a meaningful performance test?**
 1. Define goals with product (e.g. P95 < 500 ms at 200 requests per second).
@@ -80,17 +79,17 @@ Source: interview handbook, not checked against documentation.
 6. Watch the server-side metrics alongside the load tool: Cloud Monitoring, DB slow logs, traces.
 7. Put a small smoke load test with thresholds in CI to catch regressions. Run the big tests on a schedule.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 ### Security testing
 
 **What security checks can QA own?**
-- **OWASP Top 10** awareness: broken access control, injection, auth failures, security misconfiguration, vulnerable dependencies, and others.
+- **OWASP Top 10:2025** awareness: broken access control, security misconfiguration, software supply chain failures (vulnerable dependencies), injection, authentication failures, and others.
 - **Access-control tests:** every endpoint with no token, an expired token, the wrong role, and another user's IDs (IDOR). These are some of the most valuable security tests an SDET can automate.
 - **Input tests:** SQL injection strings, XSS payloads (`<script>alert(1)</script>` must be escaped when displayed), oversized inputs, special characters.
 - **Headers:** `Strict-Transport-Security`, `Content-Security-Policy`, `X-Content-Type-Options`, secure and HttpOnly cookie flags.
 - **Pipeline scans:** dependency scanning (`npm audit`, Dependabot, Snyk), SAST (CodeQL), and a DAST baseline scan with OWASP ZAP against staging.
-- **Secrets:** none in the repo, logs, screenshots or traces. Playwright traces can capture tokens, so treat them as sensitive artefacts.
+- **Secrets:** none in the repo, logs, screenshots or traces. Playwright traces record network traffic and can capture tokens, so treat them as sensitive artefacts.
 
 ```ts
 test('users cannot read another user\'s order (IDOR)', async ({ playwright }) => {
@@ -102,7 +101,7 @@ test('users cannot read another user\'s order (IDOR)', async ({ playwright }) =>
 });
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [OWASP Top 10:2025](https://top10.owasp.org/2025/), [HTTP Headers - OWASP Cheat Sheet Series](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html)
 
 ### Test data and privacy
 
@@ -113,9 +112,9 @@ Source: interview handbook, not checked against documentation.
 - **Unique identifiers** per run or worker (`test-${Date.now()}-${test.info().parallelIndex}`) to avoid clashes in parallel runs.
 - **Service virtualisation** for third-party data.
 
-Source: interview handbook, not checked against documentation.
+Source: [TestInfo | Playwright](https://playwright.dev/docs/api/class-testinfo)
 
 **GDPR and test data**
 Never copy production personal data into test environments without a legal basis. The usual approach is anonymisation (irreversible) or pseudonymisation (reversible with a separately stored key; still counts as personal data), plus data minimisation, access control for test environments, retention and deletion rules, and no real personal data in screenshots, videos, traces or bug tickets. Also test the product's GDPR features themselves: consent banners, data export (right of access), deletion (right to be forgotten, including backups and search indexes), and purpose limitation.
 
-Source: interview handbook, not checked against documentation.
+Source: [Art. 4 GDPR - Definitions](https://gdpr-info.eu/art-4-gdpr/), [Recital 26 GDPR](https://gdpr-info.eu/recitals/no-26/), [Art. 15 GDPR - Right of access by the data subject](https://gdpr-info.eu/art-15-gdpr/), [Art. 17 GDPR - Right to erasure](https://gdpr-info.eu/art-17-gdpr/)

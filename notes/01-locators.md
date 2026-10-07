@@ -89,7 +89,7 @@ await page.getByTestId('submit-order');
 await page.locator('#users tbody tr');
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#quick-guide), and checked by running the code.
 
 **How does `getByRole` work? Where does the role come from?**
 Most roles are implicit: they come from the HTML element, with no `role` attribute needed.
@@ -124,7 +124,7 @@ page.getByRole('button', { name: 'Save', includeHidden: true });   // hidden ele
 
 Others: `pressed`, `selected`. A div with a click handler has no role. `getByRole` will not find it, and that is a bug to report as well as a locator problem.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#locate-by-role), [Page](https://playwright.dev/docs/api/class-page#page-get-by-role), and checked by running the code.
 
 **How does text matching work? What does `exact` do?**
 This is the question candidates most often get backwards. The same rules apply to `getByText`, `getByLabel`, `getByPlaceholder`, `getByTitle`, `getByAltText` and the `name` option of `getByRole`.
@@ -148,7 +148,7 @@ page.getByText(/^log in$/i);                 // 1 match: whole string, any case
 
 `getByText` returns the smallest element that contains the text. Use it for non-interactive content. For a button with that text, `getByRole('button', { name })` is better because it also proves the thing is a button.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#locate-by-text), [Page](https://playwright.dev/docs/api/class-page#page-get-by-text), and checked by running the code.
 
 **CSS and XPath: when are they acceptable?**
 `page.locator()` takes CSS or XPath. Playwright detects XPath when the string starts with `//` or `..`; you can also write the `css=` or `xpath=` prefix.
@@ -161,13 +161,11 @@ page.locator('//table[@id="users"]//tr[td[text()="Ben"]]//button');
 
 Acceptable uses: scoping to a container by a stable id, matching a state attribute, third-party widgets you can't change, legacy pages with no semantics. Avoid long structural chains (`div > div:nth-child(3) > span`) and generated class names.
 
-Playwright adds its own CSS pseudo-classes: `:has-text("…")`, `:text("…")`, `:text-is("…")`, `:visible`, `:has(…)`, and `>> nth=1`. They work, but the locator methods (`filter`, `getByText`) do the same job and read better.
+Playwright adds its own CSS pseudo-classes: `:has-text("…")`, `:text("…")`, `:text-is("…")`, `:visible`, `:has(…)`, plus the `nth=1` selector (`button >> nth=1`). They work, but the locator methods (`filter`, `getByText`) do the same job and read better.
 
 Two XPath limits to mention: it does not pierce shadow DOM (checked: the XPath for a shadow button found 0 elements, `getByRole` and CSS found it), and it is the most brittle option when the DOM changes.
 
-*C. Narrowing down: chaining, filtering, lists*
-
-Source: interview handbook, not checked against documentation.
+Source: [Other locators](https://playwright.dev/docs/other-locators#xpath-locator), and checked by running the code.
 
 **List all the `filter` options**
 | Option | Keeps elements that… |
@@ -187,7 +185,7 @@ items.filter({ hasText: 'In stock' }).filter({ hasText: 'Product 3' });   // fil
 
 The locator passed to `has` is resolved relative to the element being filtered, not the whole page.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locator](https://playwright.dev/docs/api/class-locator#locator-filter), and checked by running the code.
 
 **`and()`, `or()`, `first()`, `nth()`, `last()`?**
 ```ts
@@ -201,7 +199,7 @@ await expect(cta).toBeVisible();
 
 `or()` is still strict: if both alternatives are on the page at once it throws, so add `.first()` in that case. `nth()` is zero-based. Positional locators are a smell unless the position is what you are testing.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#locator-operators), and checked by running the code.
 
 **How do you work with a list of elements?**
 ```ts
@@ -217,7 +215,7 @@ The trap: `count()`, `all()` and `allTextContents()` do not wait. Checked on a p
 
 To assert the texts of a whole list in one retrying step: `await expect(items.getByRole('heading')).toHaveText(['Product 1', 'Product 2', 'Product 3'])`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Locators](https://playwright.dev/docs/locators#lists), [Locator](https://playwright.dev/docs/api/class-locator#locator-all), and checked by running the code.
 
 **How do you get from a child to its parent or a sibling?**
 Prefer to start from the parent and filter it by the child:
@@ -228,9 +226,9 @@ page.getByRole('listitem').filter({ has: page.getByText('Out of stock') });
 
 If you must go up, XPath `..` works on any locator: `page.getByText('Out of stock').locator('..')`. Playwright has no `parent()` or `sibling()` method. For a sibling, locate the shared container and then the other child.
 
-Source: interview handbook, not checked against documentation.
+Source: [Other locators](https://playwright.dev/docs/other-locators#parent-element-locator), and checked by running the code.
 
 **A locator works locally and times out in CI. What do you check?**
 Open the trace, go to the failing action and read the call log: it says whether the element was not found, found but not visible, not stable, or covered by another element ("… intercepts pointer events"). Then the DOM snapshot shows what was on screen. Usual causes: a different viewport (the desktop menu collapsed into a hamburger), another locale or translated text, a cookie or consent overlay, slower data loading so the list was still empty, different test data, a feature flag. This connects straight to your daily triage: real bug vs script issue vs dependent service.
 
-Source: interview handbook, not checked against documentation.
+Source: [Trace viewer](https://playwright.dev/docs/trace-viewer#trace-viewer-features)
