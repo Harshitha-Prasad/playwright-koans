@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Order status · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Order status</h1>
+      <span class="muted">Nothing on this page happens instantly.</span>
+    </header>
+
+    <main>
+      <!-- A list that arrives ~1.2s after the click. -->
+      <section aria-labelledby="specials-heading">
+        <h2 id="specials-heading">Today's specials</h2>
+        <button type="button" id="load-specials">Load specials</button>
+        <p data-testid="specials-status"></p>
+        <ul aria-label="Specials" id="specials"></ul>
+      </section>
+
+      <!-- A button that is disabled for the first second. -->
+      <section aria-labelledby="payment-heading">
+        <h2 id="payment-heading">Payment</h2>
+        <button type="button" id="pay" disabled>Pay now</button>
+        <p data-testid="payment-status"></p>
+      </section>
+
+      <!-- Text that changes 1.5s after the click. -->
+      <section aria-labelledby="tracker-heading">
+        <h2 id="tracker-heading">Order tracker</h2>
+        <button type="button" id="start-order">Start order</button>
+        <p data-testid="order-status">No order yet</p>
+      </section>
+
+      <!-- A toast that appears after 0.4s and removes itself 1.5s later. -->
+      <section aria-labelledby="prefs-heading">
+        <h2 id="prefs-heading">Preferences</h2>
+        <button type="button" id="save-prefs">Save preferences</button>
+        <div id="toast-area"></div>
+      </section>
+
+      <!-- Items that trickle in every 300ms until there are five. -->
+      <section aria-labelledby="queue-heading">
+        <h2 id="queue-heading">Queue</h2>
+        <button type="button" id="open-queue">Open the queue</button>
+        <ul aria-label="Queue" id="queue"></ul>
+      </section>
+
+      <!-- Something that takes 4 seconds: longer than the default assertion timeout. -->
+      <section aria-labelledby="roast-heading">
+        <h2 id="roast-heading">Slow roast</h2>
+        <button type="button" id="start-roast">Start slow roast</button>
+        <p data-testid="roast-status">Idle</p>
+      </section>
+    </main>
+
+    <script>
+      const byId = (id) => document.getElementById(id);
+      const byTestId = (id) => document.querySelector(`[data-testid="${id}"]`);
+
+      byId('load-specials').addEventListener('click', async () => {
+        const list = byId('specials');
+        list.replaceChildren();
+        byTestId('specials-status').textContent = 'Loading…';
+        const response = await fetch('/api/specials?delay=1200');
+        const specials = await response.json();
+        for (const special of specials) {
+          const item = document.createElement('li');
+          item.textContent = special.name;
+          list.append(item);
+        }
+        byTestId('specials-status').textContent = '';
+      });
+
+      setTimeout(() => (byId('pay').disabled = false), 1000);
+      byId('pay').addEventListener('click', () => {
+        byTestId('payment-status').textContent = 'Payment received';
+      });
+
+      byId('start-order').addEventListener('click', () => {
+        byTestId('order-status').textContent = 'Preparing…';
+        setTimeout(() => (byTestId('order-status').textContent = 'Ready for pickup'), 1500);
+      });
+
+      byId('save-prefs').addEventListener('click', () => {
+        setTimeout(() => {
+          const toast = document.createElement('div');
+          toast.setAttribute('role', 'alert');
+          toast.textContent = 'Preferences saved';
+          byId('toast-area').append(toast);
+          setTimeout(() => toast.remove(), 1500);
+        }, 400);
+      });
+
+      byId('open-queue').addEventListener('click', () => {
+        const queue = byId('queue');
+        queue.replaceChildren();
+        let ticket = 0;
+        const timer = setInterval(() => {
+          ticket += 1;
+          const item = document.createElement('li');
+          item.textContent = `Ticket ${ticket}`;
+          queue.append(item);
+          if (ticket === 5) clearInterval(timer);
+        }, 300);
+      });
+
+      byId('start-roast').addEventListener('click', () => {
+        byTestId('roast-status').textContent = 'Roasting…';
+        setTimeout(() => (byTestId('roast-status').textContent = 'Roast complete'), 4000);
+      });
+    </script>
+  </body>
+</html>

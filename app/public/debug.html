@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Checkout · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Checkout</h1>
+    </header>
+
+    <nav aria-label="Main" class="site-nav">
+      <button type="button" class="nav-toggle" aria-expanded="false">Menu</button>
+      <div class="nav-links">
+        <a href="/">Home</a>
+        <a href="/network.html">Specials</a>
+        <a href="/components.html">Order options</a>
+      </div>
+    </nav>
+
+    <main>
+      <section aria-labelledby="pay-heading">
+        <h2 id="pay-heading">Your order: €7.60</h2>
+        <button type="button" id="continue">Continue to payment</button>
+        <button type="button" id="pay" hidden>Pay €7.60</button>
+        <p data-testid="checkout-status"></p>
+      </section>
+
+      <section aria-labelledby="voucher-heading">
+        <h2 id="voucher-heading">Voucher</h2>
+        <button type="button" id="apply-voucher">Apply voucher</button>
+        <p data-testid="voucher-status">No voucher applied</p>
+      </section>
+
+      <section aria-labelledby="points-heading">
+        <h2 id="points-heading">Loyalty points</h2>
+        <button type="button" id="check-points">Check loyalty points</button>
+        <p data-testid="points-status"></p>
+      </section>
+    </main>
+
+    <div class="overlay" id="newsletter" role="dialog" aria-modal="true" aria-label="Newsletter" hidden>
+      <div class="dialog-box">
+        <h2>Before you go…</h2>
+        <p>Want 10% off your next flat white? Join the newsletter.</p>
+        <button type="button" id="subscribe">Subscribe</button>
+        <button type="button" id="no-thanks">No thanks</button>
+      </div>
+    </div>
+
+    <script>
+      const byId = (id) => document.getElementById(id);
+      const byTestId = (id) => document.querySelector(`[data-testid="${id}"]`);
+
+      // Responsive nav
+      const toggle = document.querySelector('.nav-toggle');
+      const links = document.querySelector('.nav-links');
+      toggle.addEventListener('click', () => {
+        const open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+      });
+
+      // Checkout: the Pay button appears together with a marketing overlay that covers it.
+      byId('continue').addEventListener('click', () => {
+        byId('pay').hidden = false;
+        byId('newsletter').hidden = false;
+      });
+      for (const id of ['subscribe', 'no-thanks']) {
+        byId(id).addEventListener('click', () => (byId('newsletter').hidden = true));
+      }
+      byId('pay').addEventListener('click', () => {
+        byTestId('checkout-status').textContent = 'Order placed';
+      });
+
+      // Voucher: this handler blows up before it can update the page.
+      byId('apply-voucher').addEventListener('click', () => {
+        throw new Error('Voucher service is not configured');
+      });
+
+      // Loyalty points: the page calls an endpoint that does not exist.
+      byId('check-points').addEventListener('click', async () => {
+        const response = await fetch('/api/loyalty/points');
+        byTestId('points-status').textContent = response.ok
+          ? `You have ${(await response.json()).points} points`
+          : 'Something went wrong';
+      });
+    </script>
+  </body>
+</html>

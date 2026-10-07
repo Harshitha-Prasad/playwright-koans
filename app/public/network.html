@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Today's specials · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Today's specials</h1>
+      <span class="muted">Everything here comes from GET /api/specials.</span>
+    </header>
+    <main>
+      <section>
+        <button type="button" id="refresh">Refresh</button>
+        <p data-testid="refresh-status"></p>
+        <ul aria-label="Specials" id="specials"></ul>
+        <div id="message"></div>
+      </section>
+    </main>
+    <script>
+      const list = document.getElementById('specials');
+      const message = document.getElementById('message');
+      const refreshStatus = document.querySelector('[data-testid="refresh-status"]');
+
+      async function load() {
+        list.replaceChildren();
+        message.replaceChildren();
+        try {
+          const response = await fetch('/api/specials');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const specials = await response.json();
+          if (specials.length === 0) {
+            const empty = document.createElement('p');
+            empty.textContent = 'No specials today';
+            message.append(empty);
+            return true;
+          }
+          for (const special of specials) {
+            const item = document.createElement('li');
+            item.textContent = `${special.name} — €${special.price.toFixed(2)}`;
+            list.append(item);
+          }
+          return true;
+        } catch {
+          const alert = document.createElement('p');
+          alert.setAttribute('role', 'alert');
+          alert.textContent = 'Could not load specials';
+          message.append(alert);
+          return false;
+        }
+      }
+
+      document.getElementById('refresh').addEventListener('click', async () => {
+        refreshStatus.textContent = '';
+        if (await load()) refreshStatus.textContent = 'Updated just now';
+      });
+
+      load();
+    </script>
+  </body>
+</html>

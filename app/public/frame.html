@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Payment frame</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <form id="payment">
+      <label for="holder">Card holder</label>
+      <input id="holder" type="text" required />
+      <button type="submit">Pay</button>
+    </form>
+    <p role="status" id="payment-result"></p>
+    <script>
+      document.getElementById('payment').addEventListener('submit', (event) => {
+        event.preventDefault();
+        document.getElementById('payment-result').textContent = `Paid by ${document.getElementById('holder').value}`;
+      });
+    </script>
+  </body>
+</html>

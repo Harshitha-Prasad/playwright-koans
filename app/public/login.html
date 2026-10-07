@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Staff login · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Staff login</h1>
+      <span class="muted">Any username works. The password is "playwright".</span>
+    </header>
+    <main>
+      <section>
+        <form id="login">
+          <label for="username">Username</label>
+          <input id="username" type="text" autocomplete="off" required />
+          <label for="password">Password</label>
+          <input id="password" type="password" required />
+          <button type="submit">Log in</button>
+        </form>
+        <div id="message"></div>
+      </section>
+    </main>
+    <script>
+      document.getElementById('login').addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const message = document.getElementById('message');
+        message.replaceChildren();
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value,
+            password: document.getElementById('password').value,
+          }),
+        });
+        if (!response.ok) {
+          const alert = document.createElement('p');
+          alert.setAttribute('role', 'alert');
+          alert.textContent = 'Invalid credentials';
+          message.append(alert);
+          return;
+        }
+        const { token } = await response.json();
+        localStorage.setItem('token', token);
+        location.assign('/dashboard.html');
+      });
+    </script>
+  </body>
+</html>

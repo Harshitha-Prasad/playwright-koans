@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Order options · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Order options</h1>
+      <span class="muted">One of every awkward UI component.</span>
+    </header>
+
+    <main>
+      <section aria-labelledby="size-heading">
+        <h2 id="size-heading">Dropdowns</h2>
+        <label for="size">Size</label>
+        <select id="size">
+          <option>Small</option>
+          <option selected>Medium</option>
+          <option>Large</option>
+        </select>
+        <output data-testid="size-output">Size: Medium</output>
+
+        <label for="extras">Extras</label>
+        <select id="extras" multiple size="3">
+          <option>Oat milk</option>
+          <option>Extra shot</option>
+          <option>Vanilla syrup</option>
+        </select>
+        <output data-testid="extras-output">Extras: none</output>
+      </section>
+
+      <section aria-labelledby="options-heading">
+        <h2 id="options-heading">Checkboxes and radio buttons</h2>
+        <fieldset>
+          <legend>Milk</legend>
+          <label><input type="radio" name="milk" value="Whole" checked /> Whole</label>
+          <label><input type="radio" name="milk" value="Oat" /> Oat</label>
+          <label><input type="radio" name="milk" value="None" /> None</label>
+        </fieldset>
+        <label><input type="checkbox" id="to-go" /> To go</label>
+        <output data-testid="options-output">Milk: Whole · To go: no</output>
+      </section>
+
+      <section aria-labelledby="upload-heading">
+        <h2 id="upload-heading">File upload</h2>
+        <label for="receipt">Upload receipt</label>
+        <input type="file" id="receipt" />
+        <output data-testid="upload-output">No file chosen</output>
+      </section>
+
+      <section aria-labelledby="dialogs-heading">
+        <h2 id="dialogs-heading">Browser dialogs</h2>
+        <button type="button" id="delete-order">Delete order</button>
+        <button type="button" id="rename-order">Rename order</button>
+        <output data-testid="dialog-output">Nothing happened yet</output>
+      </section>
+
+      <section aria-labelledby="frame-heading">
+        <h2 id="frame-heading">Payment (inside an iframe)</h2>
+        <iframe title="Payment" src="/frame.html"></iframe>
+      </section>
+
+      <section aria-labelledby="loyalty-heading">
+        <h2 id="loyalty-heading">Loyalty card (inside shadow DOM)</h2>
+        <loyalty-card></loyalty-card>
+      </section>
+
+      <section aria-labelledby="receipt-heading">
+        <h2 id="receipt-heading">New tab and download</h2>
+        <p><a href="/receipt.html" target="_blank" rel="noopener">Open receipt</a></p>
+        <p><a href="/download/report.csv" download>Download report</a></p>
+      </section>
+
+      <section aria-labelledby="account-heading">
+        <h2 id="account-heading">Hover menu</h2>
+        <div class="hover-menu">
+          <button type="button" aria-haspopup="menu">Account</button>
+          <div role="menu">
+            <button type="button" role="menuitem" id="sign-out">Sign out</button>
+          </div>
+        </div>
+        <output data-testid="account-output">Signed in as Ada</output>
+      </section>
+
+      <section aria-labelledby="orders-heading">
+        <h2 id="orders-heading">Orders table</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Drink</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Ada</td>
+              <td>Flat White</td>
+              <td>Preparing</td>
+              <td><button type="button">Cancel</button></td>
+            </tr>
+            <tr>
+              <td>Grace</td>
+              <td>Cappuccino</td>
+              <td>Preparing</td>
+              <td><button type="button">Cancel</button></td>
+            </tr>
+            <tr>
+              <td>Linus</td>
+              <td>Cold Brew</td>
+              <td>Ready</td>
+              <td><button type="button">Cancel</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </main>
+
+    <script>
+      const byId = (id) => document.getElementById(id);
+      const byTestId = (id) => document.querySelector(`[data-testid="${id}"]`);
+
+      // Dropdowns
+      byId('size').addEventListener('change', (event) => {
+        byTestId('size-output').textContent = `Size: ${event.target.value}`;
+      });
+      byId('extras').addEventListener('change', (event) => {
+        const chosen = [...event.target.selectedOptions].map((option) => option.value);
+        byTestId('extras-output').textContent = `Extras: ${chosen.length ? chosen.join(', ') : 'none'}`;
+      });
+
+      // Checkboxes and radios
+      const renderOptions = () => {
+        const milk = document.querySelector('input[name="milk"]:checked').value;
+        byTestId('options-output').textContent = `Milk: ${milk} · To go: ${byId('to-go').checked ? 'yes' : 'no'}`;
+      };
+      for (const input of document.querySelectorAll('input[name="milk"], #to-go')) {
+        input.addEventListener('change', renderOptions);
+      }
+
+      // File upload
+      byId('receipt').addEventListener('change', (event) => {
+        const [file] = event.target.files;
+        byTestId('upload-output').textContent = file ? `${file.name} (${file.size} bytes)` : 'No file chosen';
+      });
+
+      // Native dialogs
+      byId('delete-order').addEventListener('click', () => {
+        byTestId('dialog-output').textContent = confirm('Delete order #1042?') ? 'Order deleted' : 'Order kept';
+      });
+      byId('rename-order').addEventListener('click', () => {
+        const name = prompt('New order name');
+        byTestId('dialog-output').textContent = name ? `Renamed to ${name}` : 'Rename cancelled';
+      });
+
+      // Shadow DOM
+      customElements.define(
+        'loyalty-card',
+        class extends HTMLElement {
+          constructor() {
+            super();
+            let stamps = 0;
+            const root = this.attachShadow({ mode: 'open' });
+            root.innerHTML = `
+              <style>button { padding: 8px 14px; font: inherit; } p { font-weight: 600; }</style>
+              <button type="button">Collect stamp</button>
+              <p>Stamps: 0</p>`;
+            root.querySelector('button').addEventListener('click', () => {
+              stamps += 1;
+              root.querySelector('p').textContent = `Stamps: ${stamps}`;
+            });
+          }
+        },
+      );
+
+      // Hover menu
+      byId('sign-out').addEventListener('click', () => {
+        byTestId('account-output').textContent = 'Signed out';
+      });
+
+      // Table
+      for (const row of document.querySelectorAll('tbody tr')) {
+        row.querySelector('button').addEventListener('click', (event) => {
+          row.children[2].textContent = 'Cancelled';
+          event.target.disabled = true;
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+{
+  "name": "playwright-koans",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Learn (or re-learn) Playwright by fixing failing tests. Fork it, turn the koans green, walk into the interview.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "next": "playwright test --project=koans --workers=1 --max-failures=1",
+    "koan": "playwright test --project=koans",
+    "koans": "playwright test --project=koans",
+    "diagnostic": "playwright test --project=koans --grep @diagnostic",
+    "solutions": "playwright test --project=solutions",
+    "ui": "playwright test --project=koans --ui",
+    "report": "playwright show-report",
+    "app": "node app/server.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@types/node": "22.20.5",
+    "typescript": "7.0.2"
+  }
+}

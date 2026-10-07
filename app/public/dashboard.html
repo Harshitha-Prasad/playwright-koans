@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dashboard · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <h1 id="greeting">Loading…</h1>
+    </header>
+    <main>
+      <section>
+        <p data-testid="points"></p>
+        <button type="button" id="logout">Log out</button>
+      </section>
+    </main>
+    <script>
+      // No token in localStorage? Back to the login page you go.
+      const token = localStorage.getItem('token');
+      if (!token) {
+        location.replace('/login.html');
+      } else {
+        fetch('/api/profile', { headers: { Authorization: `Bearer ${token}` } })
+          .then((response) => (response.ok ? response.json() : Promise.reject(new Error('Unauthorised'))))
+          .then((profile) => {
+            document.getElementById('greeting').textContent = `Hello, ${profile.name}`;
+            document.querySelector('[data-testid="points"]').textContent = `Loyalty points: ${profile.loyaltyPoints}`;
+          })
+          .catch(() => {
+            localStorage.removeItem('token');
+            location.replace('/login.html');
+          });
+      }
+
+      document.getElementById('logout').addEventListener('click', () => {
+        localStorage.removeItem('token');
+        location.assign('/login.html');
+      });
+    </script>
+  </body>
+</html>

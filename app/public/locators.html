@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Menu · Koans Café</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header>
+      <img src="/logo.svg" alt="Koans Café logo" width="40" height="40" />
+      <h1>Koans Café</h1>
+      <span title="Opening hours">Mon–Sat, 8:00–18:00</span>
+    </header>
+
+    <main>
+      <section aria-labelledby="signin-heading">
+        <h2 id="signin-heading">Sign in</h2>
+        <form id="signin">
+          <label for="email">Email address</label>
+          <input id="email" type="email" autocomplete="off" required />
+
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Your password" required />
+
+          <div>
+            <label><input id="remember" type="checkbox" /> Remember me</label>
+          </div>
+
+          <button type="submit">Sign in</button>
+        </form>
+        <p role="status" id="signin-status"></p>
+      </section>
+
+      <section aria-labelledby="menu-heading">
+        <h2 id="menu-heading">Menu</h2>
+        <div class="promo">New: Double Espresso!</div>
+        <div class="container">
+          <ul aria-label="Menu" class="products">
+            <li data-testid="product-card">
+              <h3>Espresso</h3>
+              <span class="price">€2.20</span>
+              <button type="button">Add to cart</button>
+            </li>
+            <li data-testid="product-card">
+              <h3>Double Espresso</h3>
+              <span class="price">€2.90</span>
+              <button type="button">Add to cart</button>
+            </li>
+            <li data-testid="product-card">
+              <h3>Flat White</h3>
+              <span class="price">€3.50</span>
+              <button type="button">Add to cart</button>
+            </li>
+            <li data-testid="product-card">
+              <h3>Cappuccino</h3>
+              <span class="price">€3.80</span>
+              <button type="button">Add to cart</button>
+            </li>
+            <li data-testid="product-card">
+              <h3>Cold Brew</h3>
+              <span class="price">€4.10</span>
+              <button type="button">Add to cart</button>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section aria-labelledby="cart-heading">
+        <h2 id="cart-heading">Your cart (<span data-testid="cart-count">0</span>)</h2>
+        <ul aria-label="Cart" id="cart"></ul>
+      </section>
+    </main>
+
+    <script>
+      const status = document.getElementById('signin-status');
+      document.getElementById('signin').addEventListener('submit', (event) => {
+        event.preventDefault();
+        status.textContent = `Welcome back, ${document.getElementById('email').value}`;
+      });
+
+      const cart = document.getElementById('cart');
+      const count = document.querySelector('[data-testid="cart-count"]');
+      for (const card of document.querySelectorAll('[data-testid="product-card"]')) {
+        card.querySelector('button').addEventListener('click', () => {
+          const item = document.createElement('li');
+          item.textContent = card.querySelector('h3').textContent;
+          cart.append(item);
+          count.textContent = String(cart.children.length);
+        });
+      }
+    </script>
+  </body>
+</html>
