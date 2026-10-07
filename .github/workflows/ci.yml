@@ -74,3 +74,37 @@ jobs:
           name: koans-report
           path: playwright-report/
           retention-days: 14
+
+  site:
+    name: Website content and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      # Runs every JavaScript snippet and compiles every TypeScript snippet shown on the site.
+      - name: Check the exercise content
+        run: npm run site:check
+
+      # Includes the comparison of the Locator Gym's engine with real Playwright.
+      - name: Test the website
+        run: npm run site:test
+
+      - name: Upload HTML report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-report
+          path: playwright-report-site/
+          retention-days: 14

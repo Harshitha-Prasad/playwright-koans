@@ -13,12 +13,13 @@ Koans: `koans/08-reporting.spec.ts` · Config: `playwright.config.ts` · Workflo
 
 ## Reading this repo's workflow
 
-`.github/workflows/ci.yml` has two jobs:
+`.github/workflows/ci.yml` has three jobs:
 
 1. **Solutions** runs `npm run typecheck` and `npm run solutions`. This is the real quality gate: it proves every koan has a working answer against the current Playwright version.
 2. **Koans progress** runs the koans with `continue-on-error`, so your fork shows how many are green on the run's summary page without failing the build while you are still learning.
+3. **Website content and tests** checks the exercises shown on the website and tests the site itself.
 
-Both upload `playwright-report/` as an artifact with `if: ${{ !cancelled() }}`, so the report is there precisely when you need it.
+Each job uploads its HTML report as an artifact with `if: ${{ !cancelled() }}`, so the report is there precisely when you need it. A second workflow, `pages.yml`, builds the website and deploys it to GitHub Pages.
 
 ## Scaling a pipeline
 

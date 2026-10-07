@@ -1,5 +1,16 @@
 # Playwright Koans
 
+Hands-on practice for QA engineers: Playwright, TypeScript, JavaScript and testing fundamentals.
+
+**Website: https://harshitha-prasad.github.io/playwright-koans/** (in-browser exercises, nothing to install)
+
+There are two ways to use this project, and they share the same content:
+
+- **On the website**, called Red to Green: practise locators in a Locator Gym, predict what JavaScript snippets log, decide whether TypeScript compiles, and run a mock interview over about 100 questions with model answers.
+- **In this repository**: fork it and fix 65 failing Playwright tests on your own machine. The rest of this README is about that part.
+
+## The failing tests
+
 Learn Playwright, or get it back into your fingers, by fixing failing tests.
 
 65 small tests in 9 modules, all red when you start. Each one isolates a single idea: a locator strategy, an auto-wait trap, a dialog, a fixture, a mocked response, a flaky dependency. You make it green, and the idea sticks because you had to recall it and not just read it.
@@ -69,6 +80,9 @@ Solve those without looking anything up. Wherever you got stuck, do that whole m
 | 07 | Debugging: traces, call logs, console and network | 5 | [notes/07](notes/07-debugging.md) |
 | 08 | Reporting and CI | 5 | [notes/08](notes/08-reporting-ci.md) |
 | 09 | Playwright vs Selenium vs Cypress | – | [notes/09](notes/09-playwright-vs-selenium-vs-cypress.md) |
+| 10 | TypeScript for testers | – | [notes/10](notes/10-typescript-for-testers.md) |
+| 11 | Testing fundamentals | – | [notes/11](notes/11-testing-fundamentals.md) |
+| 12 | Scenario questions | – | [notes/12](notes/12-scenarios.md) |
 
 Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract.
 
@@ -102,7 +116,7 @@ After every run you get a progress summary:
 - **Run before you fix.** Predict how the koan will fail, then check. The error messages are part of the syllabus.
 - **Open the trace.** Every failed koan records one. `npm run report`, click the test, open the trace, and look at the DOM snapshot, console and network at the failing step.
 - **Solutions are in `solutions/`.** Each is one reasonable answer, not the only one. Look after you have a green test, or after an honest fifteen minutes.
-- **Use AI as a reviewer, not as the solver.** Solve the koan yourself, then ask an assistant to critique your answer or quiz you on the "Interviewers ask" questions.
+- **Use AI as the interviewer, not as the solver.** `prompts/mock-interviewer.md` turns any assistant into the person asking the questions. In a coding agent that supports skills, the same rules are available as `.claude/skills/mock-interview`.
 - **Say it out loud.** After each module, answer its interview questions without the note open.
 
 ## Project layout
@@ -111,10 +125,32 @@ After every run you get a progress summary:
 app/           the café demo app: a dependency-free Node server and a few HTML pages
 koans/         the failing tests you fix
 solutions/     a passing answer for every koan
-notes/         one page per module, plus the tool comparison
+notes/         one page per topic; also the source of the website's pages and question bank
+site/          the website: build script, in-browser exercises, their content and tests
+prompts/       the mock interviewer prompt
 support/       the todo() helper and a custom progress reporter
-.github/       CI: runs the solutions, reports koan progress
+.github/       CI: runs the solutions, tests the website, deploys it to GitHub Pages
 ```
+
+## The website
+
+The site is static and is generated from the files in this repository, so there is one source for everything.
+
+| Command | What it does |
+| --- | --- |
+| `npm run site` | Build the site and preview it on http://localhost:4174 |
+| `npm run site:check` | Run every JavaScript snippet and compile every TypeScript snippet shown on the site |
+| `npm run site:test` | Test the site in a browser, including the Locator Gym's engine against real Playwright |
+
+It is published by `.github/workflows/pages.yml` on every push to `main`. One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
+
+To change the site's name or the repository link, edit `site/site.config.mjs`.
+
+### Adding content
+
+- **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. It appears on the topic page and in the mock interview.
+- **A scenario:** same format, in `notes/12-scenarios.md`. The best ones come from things that happened to you.
+- **A locator challenge, a JavaScript snippet or a TypeScript snippet:** add an entry to the matching file in `site/content/`, then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
 
 ## CI
 
@@ -123,7 +159,9 @@ support/       the todo() helper and a custom progress reporter
 - **Solutions pass** type-checks the project and runs every solution. If a Playwright upgrade breaks a koan's answer, this is where it shows.
 - **Koans progress** runs the koans and writes the progress table to the run summary. It is allowed to fail, so your fork stays buildable while you work through it.
 
-Both jobs upload the HTML report as an artifact. [Note 08](notes/08-reporting-ci.md) walks through the workflow.
+- **Website content and tests** runs the content check and the site tests.
+
+Each job uploads its HTML report as an artifact. [Note 08](notes/08-reporting-ci.md) walks through the workflow.
 
 ## Maintaining and contributing
 

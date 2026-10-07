@@ -3,11 +3,24 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node"],
+    "lib": [
+      "ES2022",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "node"
+    ],
     "strict": true,
     "noEmit": true,
     "skipLibCheck": true
   },
-  "include": ["koans", "solutions", "support", "playwright.config.ts"]
+  "include": [
+    "koans",
+    "solutions",
+    "support",
+    "site/tests",
+    "playwright.config.ts",
+    "playwright.site.config.ts"
+  ]
 }
