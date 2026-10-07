@@ -1,0 +1,86 @@
+name: Latest Playwright
+
+# Once a week, runs everything against the newest Playwright release instead of the pinned one.
+# A red run means a new version changed something this project teaches: the run opens an issue,
+# and the fix is to update the content and then the pinned version in package.json.
+
+on:
+  schedule:
+    - cron: '17 5 * * 1' # Mondays, 05:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  latest:
+    name: Everything against the latest Playwright
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Switch to the latest Playwright
+        id: versions
+        run: |
+          pinned=$(node -p "require('@playwright/test/package.json').version")
+          npm install --no-save @playwright/test@latest
+          latest=$(node -p "require('@playwright/test/package.json').version")
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "Pinned: $pinned, latest: $latest" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Run the solutions
+        run: npm run solutions
+
+      - name: Check the exercise content
+        run: npm run site:check
+
+      # Includes the comparison of the playground with real Playwright.
+      - name: Test the website
+        run: npm run site:test
+
+      - name: Upload HTML reports
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: latest-playwright-reports
+          path: |
+            playwright-report/
+            playwright-report-site/
+          retention-days: 14
+
+      # One open issue at a time: a second red week adds a comment instead of a new issue.
+      - name: Report a failure
+        if: ${{ failure() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: Content needs an update for the latest Playwright
+          BODY: |
+            The weekly run against Playwright ${{ steps.versions.outputs.latest }} failed. The pinned version is ${{ steps.versions.outputs.pinned }}.
+
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            What to do: open the run, see which solution or site test failed, read the release notes of the new version, update the content, then update the pinned version in package.json.
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "in:title \"$TITLE\"" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$TITLE" --body "$BODY"
+          fi

@@ -15,6 +15,8 @@ type StepChallenge = {
   forbid?: string[];
   mistakes?: { kind: 'error' | 'rule'; code: string }[];
 };
+type FlakyRun = { label: string; pace: number; order?: string; starter: boolean };
+type FlakyChallenge = { id: string; title: string; starter: string; solution: string; check: string; require?: string[]; forbid?: string[]; runs: FlakyRun[] };
 type CodeChallenge = { id: string; title: string; solution: string; starter: string };
 type JsChallenge = { id: string; expected: string[] };
 type TsCheck = { id: string; compiles: boolean };
@@ -23,6 +25,7 @@ type Content = {
   locatorChallenges: LocatorChallenge[];
   parityProbes: string[];
   stepChallenges: StepChallenge[];
+  flakyChallenges: FlakyChallenge[];
   codeChallenges: CodeChallenge[];
   jsChallenges: JsChallenge[];
   tsChecks: TsCheck[];
@@ -37,7 +40,7 @@ const firstLine = (message: string | null | undefined) =>
 const loadContent = async (request: APIRequestContext): Promise<Content> => (await request.get('content.json')).json();
 
 /** Opens the playground on a track and waits until the practice page inside it is ready. */
-async function openPlayground(page: Page, track: 'locators' | 'steps' | 'code'): Promise<void> {
+async function openPlayground(page: Page, track: 'locators' | 'steps' | 'flaky' | 'code'): Promise<void> {
   await page.goto(`playground.html?track=${track}`);
   if (track !== 'code') {
     await expect(page.frameLocator('iframe').getByRole('heading', { name: 'Koans Café' })).toBeVisible();
@@ -328,6 +331,102 @@ test.describe('Playground: test steps', () => {
     await page.getByRole('button', { name: 'Run test' }).click();
     await expect(verdict).toContainText('expect(locator).toHaveText(expected) failed', { timeout: 10_000 });
     await expect(page.locator('.pg-log')).toContainText('Received: "Order kept"');
+  });
+});
+
+test.describe('Playground: flaky tests', () => {
+  const practiceUrl = (run: FlakyRun) => `assets/practice.html?pace=${run.pace}${run.order ? `&order=${run.order}` : ''}`;
+
+  /** One run with real Playwright, with its default 5 second expect timeout. */
+  async function realRun(browser: Browser, baseURL: string, code: string, check: string, run: FlakyRun) {
+    const context = await browser.newContext({ baseURL });
+    const page = await context.newPage();
+    page.setDefaultTimeout(3_000);
+    await page.goto(practiceUrl(run));
+    let error: string | null = null;
+    try {
+      await new AsyncFunction('page', 'expect', code)(page, expect.configure({ timeout: 5_000 }));
+    } catch (caught) {
+      error = (caught as Error).message.split('\n')[0];
+    }
+    const reached = error ? false : await page.evaluate(`(() => { ${check} })()`);
+    await context.close();
+    return { ok: !error && reached === true, error };
+  }
+
+  /** The same run with the playground's runtime. */
+  async function playgroundRun(browser: Browser, baseURL: string, code: string, challenge: FlakyChallenge, run: FlakyRun) {
+    const context = await browser.newContext({ baseURL });
+    const page = await context.newPage();
+    await page.goto(practiceUrl(run));
+    const result = await page.evaluate(
+      async ({ source, task }) => {
+        const runtime = await import(new URL('pw-runtime.js', location.href).href);
+        const rules = await import(new URL('rules.js', location.href).href);
+        const outcome = await runtime.runSteps(source, document, { expectTimeout: 5000 });
+        const reached = outcome.ok ? new Function(task.check)() === true : false;
+        return { ok: outcome.ok && reached, error: outcome.error?.message.split('\n')[0] ?? null, broken: rules.brokenRules(task, outcome.usage) };
+      },
+      { source: code, task: challenge },
+    );
+    await context.close();
+    return result;
+  }
+
+  test('every flaky test fails where it should, every repair passes everywhere, and real Playwright agrees', async ({ browser, request, baseURL }) => {
+    test.setTimeout(240_000);
+    const { flakyChallenges } = await loadContent(request);
+    expect(flakyChallenges.length).toBeGreaterThan(0);
+
+    const compare = async (challenge: FlakyChallenge, run: FlakyRun) => {
+      const name = `${challenge.id}, ${run.label}`;
+      const [realStarter, mineStarter, realSolution, mineSolution] = await Promise.all([
+        realRun(browser, baseURL!, challenge.starter, challenge.check, run),
+        playgroundRun(browser, baseURL!, challenge.starter, challenge, run),
+        realRun(browser, baseURL!, challenge.solution, challenge.check, run),
+        playgroundRun(browser, baseURL!, challenge.solution, challenge, run),
+      ]);
+      expect.soft(realStarter.ok, `${name}: the flaky test in real Playwright (${realStarter.error})`).toBe(run.starter);
+      expect.soft(mineStarter.ok, `${name}: the flaky test in the playground (${mineStarter.error})`).toBe(run.starter);
+      expect.soft(firstLine(mineStarter.error), `${name}: same error`).toBe(firstLine(realStarter.error));
+      expect.soft(realSolution, `${name}: the repair in real Playwright`).toMatchObject({ ok: true });
+      expect.soft(mineSolution, `${name}: the repair in the playground`).toMatchObject({ ok: true, broken: [] });
+    };
+    // A flaky test has to fail somewhere, otherwise there is nothing to repair.
+    for (const challenge of flakyChallenges) expect(challenge.runs.some((run) => !run.starter), challenge.id).toBe(true);
+    // One challenge at a time: these tests are about timing, so they should not compete for the processor.
+    for (const challenge of flakyChallenges) {
+      for (const run of challenge.runs) await compare(challenge, run);
+    }
+  });
+
+  test('a flaky test is run under every condition, repaired, and explained', async ({ page }) => {
+    await openPlayground(page, 'flaky');
+    await pickChallenge(page, 'The sleep that was long enough');
+    const verdict = page.getByRole('status');
+    const runs = page.getByRole('list', { name: 'Runs' }).getByRole('listitem');
+
+    await page.getByRole('button', { name: 'Run everywhere' }).click();
+    await expect(verdict).toContainText('✘ Flaky: 2 of 3 runs pass.', { timeout: 20_000 });
+    await expect(runs).toHaveText([/A fast laptop/, /Your machine/, /A busy CI runner.*Expected: 3.*Received: 0/s]);
+
+    // Passing everywhere is not enough if the sleep is still there.
+    const editor = page.getByRole('textbox', { name: 'Your answer' });
+    await editor.fill(`const specials = page.getByRole('list', { name: 'Specials' }).getByRole('listitem');
+await page.getByRole('button', { name: 'Load specials' }).click();
+await page.waitForTimeout(100);
+await expect(specials).toHaveCount(3);`);
+    await page.getByRole('button', { name: 'Run everywhere' }).click();
+    await expect(verdict).toContainText('✘ Nearly.', { timeout: 20_000 });
+    await expect(page.locator('.pg-rules')).toContainText('Remove waitForTimeout');
+
+    await editor.fill(`const specials = page.getByRole('list', { name: 'Specials' }).getByRole('listitem');
+await page.getByRole('button', { name: 'Load specials' }).click();
+await expect(specials).toHaveCount(3);`);
+    await page.getByRole('button', { name: 'Run everywhere' }).click();
+    await expect(verdict).toContainText('✓ Stable: 3 of 3 runs pass.', { timeout: 20_000 });
+    await expect(page.getByText('What was wrong.')).toBeVisible();
+    await expect(page.getByRole('button', { name: /^Flaky tests 1\/\d+$/ })).toBeVisible();
   });
 });
 

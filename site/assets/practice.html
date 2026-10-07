@@ -160,6 +160,12 @@
         if (event.target.closest('a')) event.preventDefault();
       });
 
+      // The "Flaky tests" track of the playground loads this page at different speeds and with the
+      // specials in a different order: ?pace=2 doubles every delay, ?order=reversed flips the list.
+      const settings = new URLSearchParams(location.search);
+      const pace = Number(settings.get('pace')) || 1;
+      const reversed = settings.get('order') === 'reversed';
+
       const byId = (id) => document.getElementById(id);
       const byTestId = (id) => document.querySelector(`[data-testid="${id}"]`);
 
@@ -207,7 +213,8 @@
           const response = await fetch('specials.json');
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const specials = await response.json();
-          await new Promise((resolve) => setTimeout(resolve, 1200));
+          if (reversed) specials.reverse();
+          await new Promise((resolve) => setTimeout(resolve, 1200 * pace));
           for (const special of specials) {
             const item = document.createElement('li');
             item.textContent = `${special.name}, €${special.price.toFixed(2)}`;
@@ -221,7 +228,7 @@
       });
 
       // Payment: the button is disabled for the first second.
-      setTimeout(() => (byId('pay').disabled = false), 1000);
+      setTimeout(() => (byId('pay').disabled = false), 1000 * pace);
       byId('pay').addEventListener('click', () => {
         byTestId('payment-status').textContent = 'Payment received';
       });
@@ -229,7 +236,7 @@
       // Order tracker: the text changes 1.5 seconds after the click.
       byId('start-order').addEventListener('click', () => {
         byTestId('order-status').textContent = 'Preparing…';
-        setTimeout(() => (byTestId('order-status').textContent = 'Ready for pickup'), 1500);
+        setTimeout(() => (byTestId('order-status').textContent = 'Ready for pickup'), 1500 * pace);
       });
 
       // Account menu: only visible while the pointer is over it.
@@ -247,8 +254,8 @@
           toast.setAttribute('role', 'alert');
           toast.textContent = 'Preferences saved';
           byId('toast-area').append(toast);
-          setTimeout(() => toast.remove(), 1500);
-        }, 400);
+          setTimeout(() => toast.remove(), 1500 * pace);
+        }, 400 * pace);
       });
 
       // Native dialogs

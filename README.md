@@ -6,7 +6,7 @@ Hands-on practice for QA engineers: Playwright, TypeScript, JavaScript and testi
 
 There are two ways to use this project, and they share the same content:
 
-- **On the website**, called Red to Green: a playground that runs and marks your locators, short Playwright tests and JavaScript functions; quizzes on what JavaScript logs and whether TypeScript compiles; and a mock interview over about 460 questions with model answers, each marked with where it comes from.
+- **On the website**, called Red to Green: a playground that runs and marks your locators, short Playwright tests, repairs of flaky tests and JavaScript functions; quizzes on what JavaScript logs and whether TypeScript compiles; and a mock interview over about 460 questions with model answers, each marked with where it comes from.
 - **In this repository**: fork it and fix 65 failing Playwright tests on your own machine. The rest of this README is about that part.
 
 ## The failing tests
@@ -161,15 +161,16 @@ To change the site's name or the repository link, edit `site/site.config.mjs`.
 
 ### How the playground stays honest
 
-Real Playwright cannot run inside a web page, so the playground's locator and test-step tracks use a small imitation (`site/assets/locator-engine.js` and `site/assets/pw-runtime.js`). `npm run site:test` runs every reference answer and every listed mistake twice, once in the imitation and once in real Playwright, and fails if the verdicts or the error headlines differ. The JavaScript track needs no imitation: answers run for real in a Web Worker.
+Real Playwright cannot run inside a web page, so the playground's locator and test-step tracks use a small imitation (`site/assets/locator-engine.js` and `site/assets/pw-runtime.js`). `npm run site:test` runs every reference answer and every listed mistake twice, once in the imitation and once in real Playwright, and fails if the verdicts or the error headlines differ. The flaky-tests track gives you a test that fails only on a slow or a fast machine, runs it under each condition and asks you to repair it. The same comparison with real Playwright covers every one of those runs. The JavaScript track needs no imitation: answers run for real in a Web Worker.
 
 Every locator challenge has a "Show the HTML" link that prints the element with its surroundings, and the role and name it is found by. The same test run checks those roles and names against real Playwright.
 
 ### Adding content
 
 - **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. A `###` heading starts a group of questions. Add new questions at the end of a file, because the site numbers them by position. It appears on the topic page and in the mock interview.
+- **A question you were asked in an interview:** open an issue with the "I was asked this in an interview" form. No need to write the answer.
 - **A scenario:** same format, in `notes/12-scenarios.md`. The best ones come from things that happened to you.
-- **A playground challenge or a quiz snippet:** add an entry to the matching file in `site/content/` (`locator-challenges`, `step-challenges`, `code-challenges`, `js-challenges`, `ts-checks`), then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
+- **A playground challenge or a quiz snippet:** add an entry to the matching file in `site/content/` (`locator-challenges`, `step-challenges`, `flaky-challenges`, `code-challenges`, `js-challenges`, `ts-checks`), then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
 
 ## CI
 
@@ -179,6 +180,8 @@ Every locator challenge has a "Show the HTML" link that prints the element with 
 - **Koans progress** runs the koans and writes the progress table to the run summary. It is allowed to fail, so your fork stays buildable while you work through it.
 
 - **Website content and tests** runs the content check and the site tests.
+
+`.github/workflows/latest-playwright.yml` runs once a week. It installs the newest Playwright release instead of the pinned one and runs the solutions and the site tests. If a new version changes something this project teaches, the run fails and opens an issue.
 
 Each job uploads its HTML report as an artifact. [Note 08](notes/08-reporting-ci.md) walks through the workflow.
 

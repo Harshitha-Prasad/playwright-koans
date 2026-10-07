@@ -1193,3 +1193,15 @@ button.button {
 .pg-roles ul {
   padding-left: 1.2em;
 }
+
+/* Flaky tests track */
+.pg-story {
+  margin: 0 0 12px;
+  padding: 10px 14px;
+  color: var(--muted);
+  border-left: 3px solid var(--line);
+}
+
+.pg-cause {
+  margin-top: 12px;
+}

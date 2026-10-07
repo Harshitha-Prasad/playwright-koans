@@ -1,0 +1,58 @@
+name: I was asked this in an interview
+description: Share a question you were really asked, so that others can prepare for it.
+title: 'Interview question: '
+labels: ['interview question']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Questions from real interviews are the most useful thing on this site.
+        Please do not name the company or the interviewer.
+  - type: textarea
+    id: question
+    attributes:
+      label: The question
+      description: As close to the original wording as you remember.
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options:
+        - Playwright
+        - JavaScript or TypeScript
+        - Testing fundamentals
+        - Scenario or behaviour
+        - API testing
+        - CI/CD, Git or Docker
+        - Live coding
+        - Something else
+    validations:
+      required: true
+  - type: dropdown
+    id: level
+    attributes:
+      label: Level of the role
+      options:
+        - Junior
+        - Mid-level
+        - Senior
+        - Lead or above
+    validations:
+      required: true
+  - type: input
+    id: context
+    attributes:
+      label: Kind of company and year
+      description: 'For example: product company, 2026. No names.'
+  - type: textarea
+    id: follow-ups
+    attributes:
+      label: Follow-up questions
+      description: What did the interviewer ask next?
+  - type: textarea
+    id: answer
+    attributes:
+      label: What a good answer looks like (optional)
+      description: Your own answer, or what you wish you had said.

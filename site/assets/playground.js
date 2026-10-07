@@ -2,6 +2,7 @@
 //
 //   locators  type one locator; the practice page shows what it matches as you type
 //   steps     write a few lines of Playwright test code; a miniature runtime runs them
+//   flaky     repair a test that fails only now and then; it is run under several conditions
 //   code      write a JavaScript function; hidden tests run against it in a Web Worker
 
 import { describeElement, evaluateLocator } from './locator-engine.js';
@@ -33,12 +34,19 @@ const SNIPPETS = {
     ["page.once('dialog', (dialog) => dialog.accept());\n|", 'dialog'],
     ["await page.route('**/specials.json', (route) => route.fulfill({ json: [] }));\n|", 'route'],
   ],
+  flaky: [
+    ['await expect(|).toHaveText(\'\');', 'expect toHaveText'],
+    ['await expect(|).toHaveCount(0);', 'expect toHaveCount'],
+    ['await expect(|).toBeVisible();', 'expect toBeVisible'],
+    [".filter({ hasText: '|' })", '.filter hasText'],
+  ],
   code: [],
 };
 
 const TRACKS = {
   locators: { label: 'Locators', run: 'Check locator', store: 'gym', lines: 3 },
   steps: { label: 'Test steps', run: 'Run test', store: 'steps', lines: 9 },
+  flaky: { label: 'Flaky tests', run: 'Run everywhere', store: 'flaky', lines: 8 },
   code: { label: 'JavaScript', run: 'Run tests', store: 'code', lines: 11 },
 };
 
@@ -140,6 +148,7 @@ export function mountPlayground(container, { tracks, compact = false }) {
   const list = el('nav', { class: 'pg-list', 'aria-label': 'Challenges' });
   const place = el('p', { class: 'pg-place' });
   const prompt = el('h2', { class: 'pg-prompt' });
+  const story = el('p', { class: 'pg-story', hidden: true });
   const chips = el('div', { class: 'pg-chips', role: 'group', 'aria-label': 'Insert a snippet' });
   const editor = el('textarea', {
     class: 'pg-editor',
@@ -168,6 +177,7 @@ export function mountPlayground(container, { tracks, compact = false }) {
     { class: 'pg-work' },
     compact ? null : place,
     prompt,
+    story,
     compact ? null : chips,
     editor,
     el('div', { class: 'pg-actions' }, runButton, inspectButton, hintButton, answerButton, compact ? null : resetButton, nextButton),
@@ -206,7 +216,9 @@ export function mountPlayground(container, { tracks, compact = false }) {
     nextButton.hidden = compact || index === challenges().length - 1;
   }
 
-  function loadFrame() {
+  /** Loads a fresh practice page. `settings` may slow it down or reorder its data (see practice.html). */
+  function loadFrame(settings = {}) {
+    const query = new URLSearchParams({ ...settings, run: String(Date.now()) });
     return new Promise((resolve) => {
       frameDocument = null;
       frame.addEventListener(
@@ -217,7 +229,7 @@ export function mountPlayground(container, { tracks, compact = false }) {
         },
         { once: true },
       );
-      frame.src = `assets/practice.html?run=${Date.now()}`;
+      frame.src = `assets/practice.html?${query}`;
     });
   }
 
@@ -387,6 +399,55 @@ export function mountPlayground(container, { tracks, compact = false }) {
     markSolved();
   }
 
+  /** Runs the test once per condition of the challenge and reports each run on its own line. */
+  async function runFlaky() {
+    const challenge = current();
+    details.replaceChildren();
+    const rows = el('ul', { class: 'pg-tests', 'aria-label': 'Runs' });
+    details.append(rows);
+    let passed = 0;
+    let usage = {};
+    for (const [position, condition] of challenge.runs.entries()) {
+      show('', `Run ${position + 1} of ${challenge.runs.length}…`, condition.label);
+      await loadFrame({ pace: String(condition.pace), ...(condition.order ? { order: condition.order } : {}) });
+      const outcome = await runSteps(editor.value, frameDocument, { expectTimeout: 5000 });
+      let reached = false;
+      if (outcome.ok) {
+        try {
+          reached = new frameDocument.defaultView.Function(challenge.check)() === true;
+        } catch {
+          reached = false;
+        }
+      }
+      const ok = outcome.ok && reached;
+      if (ok) passed += 1;
+      usage = { ...usage, ...outcome.usage };
+      const message = outcome.ok ? 'The code ran without errors, but the page is not in the state the task describes.' : outcome.error.message;
+      rows.append(
+        el(
+          'li',
+          { class: ok ? 'right' : 'wrong' },
+          el('span', { 'aria-hidden': 'true' }, ok ? '✓' : '✘'),
+          el('div', {}, el('span', {}, condition.label, el('span', { class: 'sr-only' }, ok ? ' (passed)' : ' (failed)')), ok ? null : el('pre', { class: 'pg-log' }, message.trim())),
+        ),
+      );
+    }
+    const total = challenge.runs.length;
+    if (passed < total) {
+      show('fail', `✘ Flaky: ${passed} of ${total} runs pass.`, 'Same test, same page. Only the speed or the data changed.');
+      return;
+    }
+    const problems = brokenRules(challenge, usage);
+    if (problems.length > 0) {
+      show('fail', '✘ Nearly.', 'It passes everywhere, but:');
+      details.append(el('ul', { class: 'pg-rules' }, problems.map((problem) => el('li', {}, problem))));
+      return;
+    }
+    show('pass', `✓ Stable: ${total} of ${total} runs pass.`);
+    details.append(el('p', { class: 'pg-cause' }, el('strong', {}, 'What was wrong. '), challenge.cause));
+    markSolved();
+  }
+
   async function runCode() {
     const challenge = current();
     show('', 'Running…');
@@ -424,6 +485,7 @@ export function mountPlayground(container, { tracks, compact = false }) {
     runButton.disabled = true;
     try {
       if (track === 'steps') await runTestSteps();
+      else if (track === 'flaky') await runFlaky();
       else await runCode();
     } finally {
       busy = false;
@@ -510,6 +572,8 @@ export function mountPlayground(container, { tracks, compact = false }) {
     const starter = challenge.starter ?? (track === 'locators' ? 'page.' : '');
     place.textContent = `${challenge.group ? `${challenge.group}, ` : ''}${index + 1} of ${challenges().length}`;
     prompt.textContent = challenge.prompt;
+    story.textContent = challenge.story ?? '';
+    story.hidden = !challenge.story;
     editor.value = keepDraft && drafts[draftKey()] !== undefined ? drafts[draftKey()] : starter;
     editor.rows = Math.max(TRACKS[track].lines, editor.value.split('\n').length + 1);
     extra.replaceChildren();
@@ -526,6 +590,8 @@ export function mountPlayground(container, { tracks, compact = false }) {
       }
     } else if (track === 'steps') {
       show('', 'Write the test steps, then run them.', 'Every run starts from a freshly loaded page.');
+    } else if (track === 'flaky') {
+      show('', 'Run it first to see where it fails.', `The test is run ${challenge.runs.length} times, each time under different conditions.`);
     } else {
       show('', `Write the function ${challenge.entry}, then run the tests.`);
     }

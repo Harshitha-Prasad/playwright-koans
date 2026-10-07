@@ -17,8 +17,11 @@ import { jsChallenges } from './content/js-challenges.mjs';
 import { tsChecks } from './content/ts-checks.mjs';
 import { stepChallenges } from './content/step-challenges.mjs';
 import { codeChallenges } from './content/code-challenges.mjs';
+import { flakyChallenges } from './content/flaky-challenges.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
+// The Playwright version the playground was compared with when this build's tests ran.
+const playwrightVersion = JSON.parse(readFileSync(join(ROOT, 'node_modules', '@playwright', 'test', 'package.json'), 'utf8')).version;
 const DIST = join(ROOT, 'dist');
 
 const escapeHtml = (text) =>
@@ -77,7 +80,9 @@ ${body}
 </main>
 <footer class="site-footer">
   <p>${escapeHtml(site.name)} is free and open source under the MIT licence. <a href="${site.repoUrl}">Fork it on GitHub</a>, improve a question, add your own.</p>
+  <p>Were you asked something in an interview that is not here? <a href="${site.repoUrl}/issues/new?template=interview-question.yml">Add the question</a>.</p>
   <p>Your progress is saved in this browser only. Nothing is sent anywhere.</p>
+  <p>Checked against Playwright ${playwrightVersion}, and against each new release once a week.</p>
 </footer>
 <script type="module" src="assets/site.js"></script>
 ${scripts.map((src) => `<script type="module" src="${src}"></script>`).join('\n')}
@@ -94,8 +99,8 @@ function homePage(notes) {
     {
       href: 'playground.html',
       name: 'Playground',
-      count: `${locatorChallenges.length + stepChallenges.length + codeChallenges.length} challenges`,
-      text: 'Write locators, short Playwright tests and JavaScript functions, and have them run and marked on the spot. Works on a phone.',
+      count: `${locatorChallenges.length + stepChallenges.length + flakyChallenges.length + codeChallenges.length} challenges`,
+      text: 'Write locators, short Playwright tests and JavaScript functions, repair flaky tests, and have it all run and marked on the spot. Works on a phone.',
     },
     {
       href: 'javascript.html',
@@ -271,7 +276,7 @@ function playgroundPage() {
   return layout({
     file: 'playground.html',
     title: 'Playground',
-    description: 'Practise Playwright locators, test steps and JavaScript in your browser. Your answer is run and marked on the spot, with nothing to install.',
+    description: 'Practise Playwright locators, test steps, repairing flaky tests and JavaScript in your browser. Your answer is run and marked on the spot, with nothing to install.',
     wide: true,
     scripts: ['assets/playground-page.js'],
     body: `
@@ -281,8 +286,8 @@ function playgroundPage() {
 <details class="aside-note">
   <summary>How close is this to real Playwright?</summary>
   <p><strong>JavaScript track:</strong> your code really runs, in a background worker, against hidden tests. Nothing is imitated.</p>
-  <p><strong>Locators and test steps:</strong> real Playwright cannot run inside a web page, so these two tracks use a small imitation written for this site. It finds elements by Playwright's rules, waits and retries like Playwright, and reports errors in the same words. It supports the <code>getBy*</code> locators, <code>filter()</code>, the common actions (<code>click</code>, <code>fill</code>, <code>check</code>, <code>selectOption</code>, <code>hover</code>, <code>press</code>, <code>setInputFiles</code>), the common assertions, dialogs, <code>page.route()</code> and <code>page.waitForResponse()</code>.</p>
-  <p>On every change to this site, automated tests run each reference answer and each typical mistake twice, once here and once in real Playwright, and fail if the two disagree. It is still an approximation: iframes, new tabs, downloads and traces are not covered. For those, <a href="koans.html">fix the failing tests</a> with the real tool.</p>
+  <p><strong>Locators, test steps and flaky tests:</strong> real Playwright cannot run inside a web page, so these three tracks use a small imitation written for this site. It finds elements by Playwright's rules, waits and retries like Playwright, and reports errors in the same words. It supports the <code>getBy*</code> locators, <code>filter()</code>, the common actions (<code>click</code>, <code>fill</code>, <code>check</code>, <code>selectOption</code>, <code>hover</code>, <code>press</code>, <code>setInputFiles</code>), the common assertions, dialogs, <code>page.route()</code> and <code>page.waitForResponse()</code>.</p>
+  <p>On every change to this site, automated tests run each reference answer, each typical mistake and each flaky test under every condition twice, once here and once in real Playwright, and fail if the two disagree. It is still an approximation: iframes, new tabs, downloads and traces are not covered. For those, <a href="koans.html">fix the failing tests</a> with the real tool.</p>
 </details>
 `,
   });
@@ -476,6 +481,7 @@ writeFileSync(
     `export const jsChallenges = ${JSON.stringify(jsChallenges)};`,
     `export const tsChecks = ${JSON.stringify(tsChecks)};`,
     `export const stepChallenges = ${JSON.stringify(stepChallenges)};`,
+    `export const flakyChallenges = ${JSON.stringify(flakyChallenges)};`,
     `export const codeChallenges = ${JSON.stringify(codeChallenges)};`,
     `export const questions = ${JSON.stringify(questions)};`,
     '',
@@ -502,7 +508,7 @@ writeFileSync(join(DIST, '.nojekyll'), '');
 // A plain JSON copy of the content. The site tests read it to know what to check.
 writeFileSync(
   join(DIST, 'content.json'),
-  JSON.stringify({ pages: pages.map(([file]) => file), locatorChallenges, parityProbes, stepChallenges, codeChallenges, jsChallenges, tsChecks, questionCount: questions.length }),
+  JSON.stringify({ pages: pages.map(([file]) => file), locatorChallenges, parityProbes, stepChallenges, flakyChallenges, codeChallenges, jsChallenges, tsChecks, questionCount: questions.length }),
 );
 
 console.log(`Built ${pages.length} pages, ${questions.length} questions, ${readdirSync(join(DIST, 'assets')).length} assets into dist/`);
