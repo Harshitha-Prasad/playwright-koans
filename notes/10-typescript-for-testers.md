@@ -88,3 +88,111 @@ Source: [Fixtures | Playwright](https://playwright.dev/docs/test-fixtures)
 Nobody, unless you ask. Playwright strips the types and runs the JavaScript. Add `tsc --noEmit` as a script and run it in CI before the tests.
 
 Source: [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
+
+### Fundamentals
+
+**Basic types?**
+`string, number, boolean, bigint, symbol, null, undefined, object, unknown, any, never, void`, arrays (`string[]` / `Array<string>`), tuples (`[string, number]`), enums (prefer union of string literals), literal types (`'GET' | 'POST'`).
+
+Source: interview handbook, not checked against documentation.
+
+**`any` vs `unknown` vs `never`?**
+`any` disables type checking, avoid; it silently spreads. `unknown` is the safe top type: you must narrow before use (ideal for parsed JSON or caught errors). `never` is the bottom type: functions that never return, exhausted unions, used in exhaustive `switch` checks.
+
+Source: interview handbook, not checked against documentation.
+
+**Type inference, when to annotate?**
+TS infers most local variables and return types. Annotate function parameters, public API/return types of shared helpers, and anything where inference would widen (e.g. `const method = 'GET'` infers `'GET'`, but `let method = 'GET'` infers `string`; use `as const` for literals).
+
+Source: interview handbook, not checked against documentation.
+
+**Optional (`?`), readonly, and index signatures?**
+`name?: string` → `string | undefined`. `readonly id: number` prevents reassignment. `[key: string]: unknown` allows arbitrary keys, use `Record<string, T>` instead where possible.
+
+Source: interview handbook, not checked against documentation.
+
+**Union and intersection types, discriminated unions?**
+`A | B` either; `A & B` both. Discriminated union uses a literal "kind" field for safe narrowing:
+
+```ts
+type ApiResult = { ok: true; data: User } | { ok: false; error: string };
+function handle(r: ApiResult) { if (r.ok) r.data; else r.error; }
+```
+
+Source: interview handbook, not checked against documentation.
+
+**Type narrowing, list the mechanisms**
+`typeof`, `instanceof`, `in`, equality checks, truthiness, discriminated unions, user-defined type guards (`x is Foo`), assertion functions (`asserts x is Foo`). Essential for handling `unknown` API payloads and caught errors (`catch (e: unknown)`).
+
+Source: interview handbook, not checked against documentation.
+
+**Type assertions (`as`) vs type guards, when is `as` dangerous?**
+`as` tells the compiler to trust you with no runtime check; wrong assertions are silent bugs. Prefer guards or validation (zod) for external data. `as const` and `!` (non-null assertion) are the common acceptable uses, and `!` should be rare in test code.
+
+Source: interview handbook, not checked against documentation.
+
+### Advanced typing
+
+**`keyof`, indexed access types and mapped types?**
+`keyof User` = union of keys. `User['email']` = type of that property. Mapped: `{ [K in keyof T]?: T[K] }` is how `Partial` is built. Use them to type generic page-object helpers and config objects.
+
+Source: interview handbook, not checked against documentation.
+
+**Conditional types and `infer`?**
+`T extends U ? X : Y`. `infer` extracts types, e.g. `type ElementOf<T> = T extends (infer U)[] ? U : never`. Know they exist and what `Awaited` does; you rarely write them in test code.
+
+Source: interview handbook, not checked against documentation.
+
+**Template literal types?**
+`type Route = `/api/${string}`;`, constrain strings by pattern. Useful for typed endpoints or test tags.
+
+Source: interview handbook, not checked against documentation.
+
+**Declaration merging and module augmentation, where does Playwright rely on it?**
+Adding to an existing interface from another file. Custom `expect` matchers extend Playwright's `Matchers` interface via `declare module`/`expect.extend` typing; custom fixtures are typed through `test.extend<{ ... }>()` generics rather than augmentation.
+
+Source: interview handbook, not checked against documentation.
+
+**What are `.d.ts` files and `@types/*` packages?**
+Type declaration files describe the types of JS libraries. DefinitelyTyped supplies `@types/node`, etc. Playwright ships its own types. If a library has no types you can write a minimal `declare module 'lib';`.
+
+Source: interview handbook, not checked against documentation.
+
+**Structural typing, what is it and what surprise does it cause?**
+TS compares shapes, not names ("duck typing"). Two unrelated interfaces with the same fields are interchangeable. Excess property checks only apply to object *literals*, so a wider object assigned via a variable is accepted.
+
+Source: interview handbook, not checked against documentation.
+
+**How would you type test data builders?**
+```ts
+const buildUser = (overrides: Partial<User> = {}): User =>
+  ({ id: crypto.randomUUID(), email: `u${Date.now()}@test.io`, role: 'member', ...overrides });
+```
+
+Combine with `satisfies` to check literal objects against a type without widening.
+
+Source: interview handbook, not checked against documentation.
+
+### Configuration and tooling
+
+**What does `tsconfig.json` control? Key options for a test repo?**
+`target`, `module`, `moduleResolution`, `strict` (always on), `esModuleInterop`, `resolveJsonModule`, `baseUrl`/`paths` for aliases like `@pages/*`, `include/exclude`, `types`. Playwright transpiles TS itself (no separate build needed), but type errors are only caught if you run `tsc --noEmit`, put that in CI.
+
+Source: interview handbook, not checked against documentation.
+
+**How do TS errors differ from ESLint errors?**
+`tsc` checks types; ESLint checks patterns/style, and with `typescript-eslint` can use type info for rules like `no-floating-promises`, `no-misused-promises`, `await-thenable`. Both belong in CI.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you type environment variables and config safely?**
+Parse `process.env` once at startup into a typed object; validate with zod or manual checks; fail fast if missing. Never sprinkle `process.env.X!` across the code.
+
+Source: interview handbook, not checked against documentation.
+
+### TypeScript in Playwright
+
+**What is the risk of over-typing test code?**
+Complex generic gymnastics reduce readability and slow onboarding. Test code should be boring: explicit, small types, clear names. Type precision where it prevents real bugs (fixtures, data builders, API contracts), simplicity elsewhere.
+
+Source: interview handbook, not checked against documentation.

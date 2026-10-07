@@ -118,3 +118,96 @@ The answers below are outlines. They become convincing when you replace the gene
 - Use the UI for what only exists in the UI: that a user can complete the journey, that the page shows the right state, that components work in a real browser.
 - Combine them: set up and verify through the API, exercise the one UI interaction the test is about.
 - Rule of thumb: many API tests for the rule and its edge cases, one or two UI tests to show it is wired up.
+
+### Two that seniors are almost always asked
+
+**How do you approach a flaky test?**
+Treat it as a bug report about either the test or the product, and find out which before changing anything.
+
+1. **Reproduce and measure.** Run it many times (`--repeat-each 20`, with and without parallel workers) so you know the failure rate, and whether it needs other tests running to fail.
+2. **Read the evidence.** Open the trace of a failed attempt next to a passing one and compare the step where they part: what the page looked like, which requests were in flight, what the console said.
+3. **Name the cause.** Nearly always one of: a missing wait for something the app does asynchronously, a locator that matches the wrong or more than one element, state shared between tests (same account, same record), test data that changes, an unstable environment or third party, or a real race in the product.
+4. **Fix the cause, not the symptom.** A web-first assertion in place of a sleep, data the test owns, a mocked third party. If the product has the race, it is a product bug: report it with the trace.
+5. **While you work on it,** tag or quarantine the test so it stops blocking others, with a ticket and a date. Retries are a way to see flakiness in the report, not a way to remove it.
+6. **Prove it.** Repeat the run from step 1 and compare the failure rate. Then ask what allowed it in: a missing review rule, a shared account, a lint rule that could have caught the sleep.
+
+Source: experience, not documentation.
+
+**You have two days to test a feature. How do you approach it?**
+Say the order out loud. The interviewer wants to hear you choose what not to test.
+
+1. **First hour: understand it.** What does the feature do, for whom, and what is the worst thing that can go wrong? Read the ticket and the code changes, and ask the developer and the product owner what worries them.
+2. **Rank by risk.** List the flows, score them by impact and likelihood, and agree the list with the team. This is also where you say what will not be covered.
+3. **Day one: the top of the list.** The main flows end to end, then boundaries and negative cases for the riskiest ones, checked at the lowest level that can show them (an API call is faster than ten clicks). Explore in short, time-boxed sessions with a goal each, and report bugs as you find them so fixing starts early.
+4. **Day two: widen and protect.** Integrations, permissions, the regression area around the change, one pass on other browsers or devices if relevant. Automate only the few checks that will pay back within the release, usually a smoke test of the main flow. Retest the fixes.
+5. **End with a clear statement.** What was tested, what was not, what is still open, and your recommendation. The decision to ship belongs to the team, and they need the risks in plain words.
+
+Source: experience, not documentation.
+
+### Framework and strategy
+
+**You join a team with 800 flaky Selenium tests taking 3 hours. What do you do in the first 90 days?**
+Weeks 1–2: measure (pass rate, flaky rate, duration per test, coverage of critical flows), talk to devs/product, identify top-value journeys. Weeks 3–6: quarantine flaky tests, define a smoke suite (<15 min) that gates PRs, stabilise infra (Docker, parallelism). Weeks 7–12: pilot Playwright on the highest-value area, move data setup to API, delete redundant tests, establish ownership and a flaky-test SLA, publish dashboards. Communicate trade-offs and progress regularly.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you convince developers to write testable code / add test IDs?**
+Show the cost (flaky-test time, escaped defects), make it easy (lint rule, component library defaults), pair on it, include in DoD, celebrate wins; frame as shared ownership of quality, not QA's demand.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you estimate testing effort for a feature?**
+Break into test conditions by risk; estimate design, data, automation, exploratory, regression impact; add environment/dependency risk; give a range and assumptions; refine after refinement sessions.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you measure the quality of your test automation?**
+Defect detection (bugs found pre-prod vs escaped), flaky rate, execution time, maintenance effort per sprint, coverage of critical journeys and risks, mean time to diagnose a failure (traces!), team adoption (do devs run it?).
+
+Source: interview handbook, not checked against documentation.
+
+**Performance and security, what do you cover as an SDET?**
+Performance: k6/JMeter/Artillery on critical APIs, budgets in CI, Lighthouse for web vitals; interpret P95/P99, throughput, error rate under load. Security: OWASP Top 10 awareness, ZAP baseline scans in CI, dependency scanning, auth/authorisation test cases (IDOR, role escalation), secrets hygiene. Know your limits and when to bring in specialists.
+
+Source: interview handbook, not checked against documentation.
+
+**Mobile? Non-functional? Accessibility? Localisation?**
+Have one paragraph each: Appium/Detox vs. emulation; NFR checklists; axe + manual keyboard/screen-reader checks + WCAG 2.2 AA; locale/time zone/currency/RTL tests with data-driven runs (for example `de-DE` formats, umlauts, GDPR).
+
+Source: interview handbook, not checked against documentation.
+
+### How would you test...?
+
+For any "how would you test X" question, follow the same structure so you never ramble:
+
+1. **Clarify:** users, requirements, constraints, platforms. Ask 2–3 questions first.
+2. **Functional:** happy path, then boundaries and negative cases (equivalence partitions and boundary values).
+3. **Non-functional:** performance, security, accessibility, usability, compatibility, localisation.
+4. **Integration and data:** what it talks to, and what happens when that dependency fails.
+5. **Automation plan:** what at the unit / API / UI level, and what stays exploratory.
+6. **Risk:** what you'd test first if you had one hour.
+
+**How would you test a search feature?**
+Exact, partial and no match; case; umlauts (`Müller` vs `Mueller`); special characters and injection; empty query; very long queries; typos and suggestions; filters and sorting combined; pagination; response time with large data; debounce (no request on every keystroke); results respect permissions.
+
+Source: interview handbook, not checked against documentation.
+
+**How would you test a file upload?**
+Allowed and disallowed types (check the content, not just the extension); size limit and the 0-byte case; name with spaces, umlauts or path traversal; duplicates; interrupted upload; virus scan; several files in parallel; progress bar; downloading back and comparing checksums.
+
+Source: interview handbook, not checked against documentation.
+
+**How would you test a REST endpoint such as `POST /orders`?**
+The usual categories of API test cases (see the API testing note), plus idempotency, concurrency (two orders for the last item in stock), a downstream payment failure (the order must not be left half-created), and events or emails fired exactly once.
+
+Source: interview handbook, not checked against documentation.
+
+**How would you test a scheduling feature?**
+Time zones, including users in two different zones; daylight-saving switch days (the last Sundays of March and October, when a shift can be 23 or 25 hours); overlapping shifts; shifts over midnight; leap years; regional public holidays; one person assigned twice; concurrent edits by two managers; notifications at the right local time; large rosters (performance); and generation jobs running through async tasks (retries, idempotency).
+
+Source: interview handbook, not checked against documentation.
+
+**How would you test a pen, a lift or a vending machine?**
+Use the same structure: clarify → functional → boundaries → non-functional (durability, safety, accessibility) → edge cases. Interviewers are testing your structure, not your knowledge of pens.
+
+Source: interview handbook, not checked against documentation.

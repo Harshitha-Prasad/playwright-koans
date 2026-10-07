@@ -6,7 +6,7 @@ Hands-on practice for QA engineers: Playwright, TypeScript, JavaScript and testi
 
 There are two ways to use this project, and they share the same content:
 
-- **On the website**, called Red to Green: a playground that runs and marks your locators, short Playwright tests and JavaScript functions; quizzes on what JavaScript logs and whether TypeScript compiles; and a mock interview over about 140 questions with model answers and links to the official documentation.
+- **On the website**, called Red to Green: a playground that runs and marks your locators, short Playwright tests and JavaScript functions; quizzes on what JavaScript logs and whether TypeScript compiles; and a mock interview over about 460 questions with model answers, each marked with where it comes from.
 - **In this repository**: fork it and fix 65 failing Playwright tests on your own machine. The rest of this README is about that part.
 
 ## The failing tests
@@ -87,8 +87,17 @@ Solve those without looking anything up. Wherever you got stuck, do that whole m
 | 14 | Visual, accessibility and emulation testing | – | [notes/14](notes/14-visual-accessibility-emulation.md) |
 | 15 | Playwright and AI: codegen, MCP and test agents | – | [notes/15](notes/15-playwright-and-ai.md) |
 | 16 | JavaScript for test code | – | [notes/16](notes/16-javascript-for-test-code.md) |
+| 17 | API testing: HTTP, REST, Postman | – | [notes/17](notes/17-api-testing.md) |
+| 18 | Git and GitHub | – | [notes/18](notes/18-git-and-github.md) |
+| 19 | CI/CD pipelines and Docker | – | [notes/19](notes/19-ci-cd-and-docker.md) |
+| 20 | Google Cloud for QA | – | [notes/20](notes/20-google-cloud-for-qa.md) |
+| 21 | AI for QA | – | [notes/21](notes/21-ai-for-qa.md) |
+| 22 | Coding exercises with solutions | – | [notes/22](notes/22-coding-exercises.md) |
+| 23 | SQL and database testing | – | [notes/23](notes/23-sql-and-database-testing.md) |
+| 24 | Design principles, unit testing and BDD | – | [notes/24](notes/24-design-unit-testing-bdd.md) |
+| 25 | Performance, security, test data and the command line | – | [notes/25](notes/25-performance-security-data-cli.md) |
 
-Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract. Answers end with a `Source:` line. Where it links to official documentation, the answer was checked against that page in October 2026 (Playwright 1.63). Where it says "experience, not documentation", it is advice, not fact.
+Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract. Answers end with a `Source:` line. Where it links to official documentation, the answer was checked against that page in October 2026 (Playwright 1.63). Where it says "experience, not documentation", it is advice, not fact. Where it says "interview handbook, not checked against documentation", the answer comes from a study handbook and has not been verified line by line: check it before you rely on a detail.
 
 ## Commands
 
@@ -156,7 +165,7 @@ Real Playwright cannot run inside a web page, so the playground's locator and te
 
 ### Adding content
 
-- **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. It appears on the topic page and in the mock interview.
+- **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. A `###` heading starts a group of questions. Add new questions at the end of a file, because the site numbers them by position. It appears on the topic page and in the mock interview.
 - **A scenario:** same format, in `notes/12-scenarios.md`. The best ones come from things that happened to you.
 - **A playground challenge or a quiz snippet:** add an entry to the matching file in `site/content/` (`locator-challenges`, `step-challenges`, `code-challenges`, `js-challenges`, `ts-checks`), then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
 

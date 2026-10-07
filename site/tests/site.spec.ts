@@ -350,7 +350,7 @@ test.describe('Playground on a phone', () => {
     await expect(page.getByRole('status')).toContainText('✓ 1 element, the right one.');
 
     // Every other page fits as well.
-    for (const file of ['index.html', 'javascript.html', 'typescript.html', 'interview.html', 'note-02.html', 'note-13.html', 'koans.html']) {
+    for (const file of ['index.html', 'javascript.html', 'typescript.html', 'interview.html', 'note-02.html', 'note-13.html', 'note-22.html', 'note-23.html', 'koans.html']) {
       await page.goto(file);
       const extra = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       expect(extra, `${file} scrolls sideways`).toBeLessThanOrEqual(0);
@@ -457,6 +457,22 @@ test('question cards on a note open one by one or all at once, and cite a source
   await page.getByRole('button', { name: 'Open all' }).click();
   await expect(cards.last().locator('.qa-answer')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Close all' })).toBeVisible();
+});
+
+test('a note groups its extra questions under headings, and says which answers are unchecked', async ({ page }) => {
+  await page.goto('note-12.html');
+
+  const group = page.locator('section.qa-group').filter({ has: page.getByRole('heading', { name: /^How would you test/ }) });
+  await expect(group.locator('details.qa')).toHaveCount(5);
+  // The group's introduction comes before its cards.
+  await expect(group.getByText('For any "how would you test X" question')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Framework and strategy' }).click();
+  await expect(page).toHaveURL(/#group-2$/);
+
+  const card = group.locator('details.qa').filter({ hasText: 'How would you test a search feature?' });
+  await card.locator('summary').click();
+  await expect(card.locator('.qa-answer')).toContainText('Source: interview handbook, not checked against documentation.');
 });
 
 test('the theme switch is remembered', async ({ page }) => {

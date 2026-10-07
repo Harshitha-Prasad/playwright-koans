@@ -6,6 +6,10 @@
 //   ## Interviewers ask        (or: ## Scenarios)
 //   **A question on a line of its own, in bold?**
 //   The answer, in Markdown, up to the next bold line.
+//   ### An optional group heading
+//   Optional text introducing the group, then more questions.
+//
+// Question ids come from the position in the file, so new questions go at the end.
 
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -35,14 +39,25 @@ export function parseNote(markdown, sourceFile) {
     .trim();
 
   const questions = [];
+  const groups = [];
   let current = null;
+  let group = null;
+  let inFence = false;
   for (const line of lines.slice(start + 1)) {
-    const question = line.match(/^\*\*(.+)\*\*$/);
-    if (question) {
-      current = { question: question[1], answer: [] };
+    if (line.startsWith('```')) inFence = !inFence;
+    const groupHeading = inFence ? null : line.match(/^### (.+)$/);
+    const question = inFence ? null : line.match(/^\*\*(.+)\*\*$/);
+    if (groupHeading) {
+      group = { title: groupHeading[1], intro: [] };
+      groups.push(group);
+      current = null;
+    } else if (question) {
+      current = { question: question[1], answer: [], group: group?.title ?? null };
       questions.push(current);
     } else if (current) {
       current.answer.push(line);
+    } else if (group) {
+      group.intro.push(line);
     }
   }
 
@@ -53,9 +68,11 @@ export function parseNote(markdown, sourceFile) {
     file: `note-${number}.html`,
     body,
     questionsHeading: lines[start].slice(3),
+    groups: groups.map((entry) => ({ title: entry.title, intro: entry.intro.join('\n').trim() })),
     questions: questions.map((entry, index) => ({
       id: `q-${number}-${String(index + 1).padStart(2, '0')}`,
       question: entry.question,
+      group: entry.group,
       answer: entry.answer.join('\n').trim(),
     })),
   };

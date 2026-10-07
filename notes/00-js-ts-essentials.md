@@ -61,3 +61,74 @@ Source: [TypeScript: Documentation - More on Functions](https://www.typescriptla
 No. It strips the types and runs the JavaScript. A type error only fails the build if you run `tsc --noEmit` yourself, usually as a CI step before the tests.
 
 Source: [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)
+
+### More on asynchronous JavaScript
+
+**Is JavaScript single-threaded? Then how is it asynchronous?**
+The main thread runs one call stack. Async work (timers, I/O, network) is delegated to the runtime (browser/libuv); completions are queued and processed by the **event loop** when the stack is empty. Concurrency without parallelism (Worker threads aside).
+
+Source: interview handbook, not checked against documentation.
+
+**Explain the event loop, macrotasks and microtasks**
+Macrotask queue: `setTimeout`, `setInterval`, I/O, UI events. Microtask queue: promise callbacks, `queueMicrotask`, `MutationObserver`. After each macrotask, *all* microtasks run before the next macrotask. Classic quiz:
+
+```js
+console.log('a');
+setTimeout(() => console.log('b'), 0);
+Promise.resolve().then(() => console.log('c'));
+console.log('d');   // a d c b
+```
+
+Source: interview handbook, not checked against documentation.
+
+**What is a Promise? States?**
+An object representing a future value. States: pending → fulfilled (resolved with value) or rejected (with reason). Once settled it cannot change. `.then`, `.catch`, `.finally` chain and return new promises.
+
+Source: interview handbook, not checked against documentation.
+
+**Promise chaining vs nesting, why chain?**
+Chaining returns promises from `.then` to flatten; nesting recreates callback hell and loses error propagation. A rejected promise skips to the next `.catch`.
+
+Source: interview handbook, not checked against documentation.
+
+**`async`/`await`, what does it compile down to?**
+Syntax over promises. `async` functions always return a promise. `await` pauses the function (not the thread) until the promise settles, resuming in a microtask. Errors become exceptions catchable with `try/catch`.
+
+Source: interview handbook, not checked against documentation.
+
+**Sequential vs parallel async in a loop?**
+`forEach` does not await callbacks, use `for...of` with `await` for sequential, or `Promise.all(items.map(async ...))` for parallel. Know when parallel is unsafe (rate limits, shared state).
+
+Source: interview handbook, not checked against documentation.
+
+**How does error handling work across async boundaries?**
+Errors inside an `async` function reject its promise. Errors in a callback passed to `setTimeout` are *not* caught by a surrounding `try/catch`. `unhandledrejection` events / Node's `process.on('unhandledRejection')` are the last resort. In tests: always `await` and let the runner catch; wrap only where you need custom messages.
+
+Source: interview handbook, not checked against documentation.
+
+**Write a retry helper with exponential backoff**
+```js
+async function retry(fn, { attempts = 3, baseMs = 200 } = {}) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try { return await fn(); }
+    catch (err) { lastErr = err; await new Promise(r => setTimeout(r, baseMs * 2 ** i)); }
+  }
+  throw lastErr;
+}
+```
+
+Follow-up: when is retrying *wrong*? (Hiding real flakiness; non-idempotent operations.)
+
+Source: interview handbook, not checked against documentation.
+
+**Write a debounce or a simple `sleep`/timeout wrapper**
+```js
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const withTimeout = (p, ms) =>
+  Promise.race([p, sleep(ms).then(() => { throw new Error(`Timeout after ${ms}ms`); })]);
+```
+
+Then explain why hard sleeps are an anti-pattern in Playwright (auto-waiting, `expect.poll`, `waitForResponse`).
+
+Source: interview handbook, not checked against documentation.

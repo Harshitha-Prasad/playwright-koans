@@ -1133,3 +1133,27 @@ button.button {
     }
   }
 }
+
+/* Groups of questions inside a note */
+.qa-jump {
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.9;
+}
+
+.qa-group {
+  margin-top: 2em;
+  scroll-margin-top: 80px;
+}
+
+.qa-count {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.qa-answer table {
+  display: block;
+  overflow-x: auto;
+}

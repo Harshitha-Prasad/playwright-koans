@@ -81,3 +81,28 @@ Source: experience, not documentation.
 Open the trace from CI first. Usual causes: an assertion that reads once instead of retrying, a hard-coded sleep, data that differs between environments, a slower backend, or a different viewport. Raising the global timeout is the last resort, not the first.
 
 Source: [Best Practices](https://playwright.dev/docs/best-practices#debugging-on-ci)
+
+### More on assertions
+
+**Which assertions exist for locators?**
+| Group | Assertions |
+| --- | --- |
+| Presence | `toBeVisible`, `toBeHidden`, `toBeAttached`, `toBeInViewport`, `toHaveCount` |
+| State | `toBeEnabled`, `toBeDisabled`, `toBeChecked`, `toBeEditable`, `toBeFocused`, `toBeEmpty` |
+| Content | `toHaveText`, `toContainText`, `toHaveValue`, `toHaveValues` |
+| Attributes | `toHaveAttribute`, `toHaveClass`, `toContainClass`, `toHaveId`, `toHaveCSS`, `toHaveJSProperty` |
+| Accessibility | `toHaveRole`, `toHaveAccessibleName`, `toHaveAccessibleDescription`, `toMatchAriaSnapshot` |
+
+All of them retry until the expect timeout (5 s by default), and all take `.not`.
+
+Source: interview handbook, not checked against documentation.
+
+**`toHaveText` vs `toContainText`?**
+With a string, `toHaveText` must match the full text (whitespace normalised) and `toContainText` matches a substring. Checked on `<p>Order shipped today</p>`: `toHaveText('Order shipped')` failed, `toContainText('shipped')` passed, `toHaveText(/shipped/)` passed. `toHaveText` is for element text; for an `<input>` use `toHaveValue`.
+
+Source: interview handbook, not checked against documentation.
+
+**`toBeHidden` vs `not.toBeVisible` vs `toBeAttached`?**
+`toBeHidden` passes when the element is not in the DOM or is in the DOM but not visible. `not.toBeVisible()` is the same check. `toBeAttached` is about the DOM only: an element with `display: none` is attached and hidden. Use `not.toBeAttached()` to prove something was removed.
+
+Source: interview handbook, not checked against documentation.

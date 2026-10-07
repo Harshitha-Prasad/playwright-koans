@@ -89,3 +89,129 @@ Source: ISTQB Foundation Level syllabus (not checked online)
 Black-box tests are designed from the specification, without looking at the code: the techniques in the table above. White-box tests are designed from the structure of the code, aiming at statements, branches and paths. Most QA work is black-box or grey-box, where some knowledge of the internals guides where to look.
 
 Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)
+
+### Core concepts
+
+**What is the difference between error, defect and failure?**
+An *error* (mistake) is a human action that produces an incorrect result. A *defect* (bug) is the flaw in the software caused by the error. A *failure* is the observable deviation from expected behaviour when the defect is executed. Not every defect causes a failure (dead code), and not every failure is caused by a defect (environment, hardware).
+
+Source: interview handbook, not checked against documentation.
+
+**What are the seven testing principles?**
+1. Testing shows the presence of defects, not their absence.
+2. Exhaustive testing is impossible.
+3. Early testing saves time and money (shift-left).
+4. Defects cluster together (Pareto).
+5. Beware of the pesticide paradox, repeated tests stop finding new bugs.
+6. Testing is context dependent.
+7. Absence-of-errors is a fallacy, a bug-free system can still fail the user.
+
+Senior answer: give a concrete example of at least two, e.g. "we applied defect clustering by focusing regression on the checkout module after RCA showed 60% of production incidents came from there."
+
+Source: interview handbook, not checked against documentation.
+
+**Verification vs validation?**
+Verification: are we building the product right? (reviews, static analysis, checking against specs). Validation: are we building the right product? (does it meet user needs, acceptance testing, UAT).
+
+Source: interview handbook, not checked against documentation.
+
+**Explain the test levels**
+Unit (component) → Integration (component and system integration) → System → Acceptance (user, operational, contractual, alpha/beta). Each level has different objectives, test basis, test objects, and typical defects.
+
+Source: interview handbook, not checked against documentation.
+
+**Explain the test types**
+Functional (what the system does), non-functional (how well, performance, security, usability, reliability, maintainability, portability), structural/white-box (coverage-based), change-related (confirmation/re-testing and regression).
+
+Source: interview handbook, not checked against documentation.
+
+**Static vs dynamic testing?**
+Static: no execution, reviews, walkthroughs, inspections, static analysis (linters, type checkers). Dynamic: executing the software. Static testing finds defects earlier and cheaper. TypeScript's type checker and ESLint are static testing tools you use daily, say so.
+
+Source: interview handbook, not checked against documentation.
+
+### Test design techniques
+
+**Equivalence partitioning and boundary value analysis?**
+EP: divide inputs into classes where the system should behave the same; test one value per class (valid and invalid). BVA: defects cluster at boundaries, so test the boundary and the values immediately either side (2-value or 3-value BVA). Example: age field 18–65 → partitions <18, 18–65, >65; boundaries 17, 18, 19, 64, 65, 66.
+
+Source: interview handbook, not checked against documentation.
+
+**Decision table testing?**
+For business rules with combinations of conditions. Columns = rules, rows = conditions and actions. Ensures every combination is considered and reveals ambiguous or missing rules. Collapse redundant columns.
+
+Source: interview handbook, not checked against documentation.
+
+**State transition testing?**
+For systems with states and events (order status, login lockout). Model states, transitions, events and actions; test valid transitions, invalid transitions, and sequences (0-switch, 1-switch coverage).
+
+Source: interview handbook, not checked against documentation.
+
+**Use case / scenario testing?**
+End-to-end user flows including main path and alternative/exception flows. Basis for E2E automation scenarios.
+
+Source: interview handbook, not checked against documentation.
+
+**Pairwise / orthogonal array testing?**
+Most defects are triggered by interactions of at most two parameters. Pairwise testing covers every pair of parameter values with far fewer tests than a full cartesian product. Tools: PICT, AllPairs.
+
+Source: interview handbook, not checked against documentation.
+
+**Error guessing and exploratory testing, how do you make them systematic?**
+Error guessing uses experience to target likely defect areas (nulls, empties, unicode, concurrency, time zones). Exploratory testing = simultaneous learning, design and execution. Make it systematic with **session-based test management**: time-boxed charters, session notes, debriefs. Heuristics: SFDIPOT (structure, function, data, interfaces, platform, operations, time), the "Test Heuristics Cheat Sheet" (Hendrickson).
+
+Source: interview handbook, not checked against documentation.
+
+### Test process and management
+
+**Describe the test process activities**
+Planning → monitoring & control → analysis → design → implementation → execution → completion. Be able to name outputs: test plan, test conditions, test cases, test procedures/scripts, test data, defect reports, test summary report.
+
+Source: interview handbook, not checked against documentation.
+
+**What goes in a test plan?**
+Scope, objectives, test approach/strategy, test levels and types, entry/exit criteria, environment, tools, roles, schedule, risks and mitigations, deliverables. IEEE 829 / ISO 29119 structure.
+
+Source: interview handbook, not checked against documentation.
+
+**Explain the defect life cycle**
+New → Assigned/Open → In Progress → Fixed → Ready for Retest → Retest → Closed / Reopened; plus Rejected, Deferred, Duplicate, Not a Bug. Know the fields of a good bug report: title, environment, build, steps, expected vs actual, severity, priority, evidence (logs, screenshots, HAR, trace).
+
+Source: interview handbook, not checked against documentation.
+
+**What is risk-based testing?**
+Prioritise test effort by product risk = likelihood × impact. Identify risks (with devs, product), score them, and allocate depth of testing accordingly. Senior: describe how you used it to decide what goes into the smoke suite vs. full regression vs. exploratory.
+
+Source: interview handbook, not checked against documentation.
+
+**What metrics do you report, and which do you distrust?**
+Useful: defect density per module, defect leakage (found in prod vs. pre-prod), test coverage of requirements/risks, automation pass rate over time, flaky-test rate, mean time to detect/resolve. Distrust: raw test-case counts and "% automated" without context, they measure activity, not quality.
+
+Source: interview handbook, not checked against documentation.
+
+### Agile and modern practice
+
+**Role of QA in Scrum? What happens in the Three Amigos?**
+QA participates in refinement (acceptance criteria, testability, edge cases), sprint planning (estimation includes testing), daily stand-up, review and retro. Three Amigos: PO, dev, QA agree on acceptance criteria before work starts, often written as Gherkin scenarios.
+
+Source: interview handbook, not checked against documentation.
+
+**Definition of Ready vs Definition of Done?**
+DoR: story is clear, sized, has acceptance criteria and testable conditions before it enters a sprint. DoD: code reviewed, unit tests passing, automated tests added, deployed to staging, documentation updated, acceptance criteria verified.
+
+Source: interview handbook, not checked against documentation.
+
+**BDD, what is it really, and what is it not?**
+BDD is a collaboration practice: discover behaviour through examples, formalise them (Gherkin: Given/When/Then), automate them. It is *not* "writing Cucumber". Senior view: Gherkin adds value when the business actually reads it; otherwise it adds a translation layer with maintenance cost. Be honest about when you would and would not use it.
+
+Source: interview handbook, not checked against documentation.
+
+**What is your test strategy for a microservices-based web product?**
+Unit tests per service (dev-owned); contract tests between consumers and providers (Pact / OpenAPI-based); API/integration tests per service in isolation with mocked dependencies; a thin E2E layer through the UI for critical journeys; non-functional tests (load on key endpoints, security scans in CI); observability and synthetic monitoring in production. Ownership and where each runs in the pipeline matter as much as the tests.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you do root cause analysis for a production incident?**
+Reproduce → gather evidence (logs, traces, metrics, user reports) → timeline → identify contributing causes (5 Whys, fishbone) → distinguish root cause from trigger → corrective actions (fix + test gap + process change) → verify and share (blameless post-mortem). For test gaps: ask why no test caught it, missing test, wrong level, wrong environment, flaky and ignored?
+
+Source: interview handbook, not checked against documentation.

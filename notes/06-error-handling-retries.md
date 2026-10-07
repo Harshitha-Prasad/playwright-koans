@@ -64,3 +64,26 @@ Source: experience, not documentation.
 `fail`: runs the test and expects it to fail, so you notice when the bug is fixed. `fixme`: does not run it, marks it as needing work. `skip`: does not run it because it does not apply, ideally with a condition and a reason.
 
 Source: [Annotations](https://playwright.dev/docs/test-annotations)
+
+### More on flaky tests
+
+**Retries, good or bad?**
+Useful safety net in CI (`retries: 2`) but they hide flakiness. Playwright reports flaky tests separately, track that metric and fix the root cause. Never rely on retries for correctness. `test.describe.configure({ retries })` for targeted use.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you find the root cause of a flaky test?**
+Categorise: timing (missing await / non-web-first assertion / animation), test order dependence (shared state, parallelism), data (shared users, leftover records), environment (slow CI, third-party services), app race conditions. Use traces across runs, `--repeat-each 20`, run in isolation vs. suite, check retries report. Fix the cause: proper locator/assertion, isolated data via API, mocking unstable dependencies.
+
+Source: interview handbook, not checked against documentation.
+
+**How do you handle an overlay that appears at random (cookie banner, survey popup)?**
+```ts
+await page.addLocatorHandler(page.getByRole('dialog', { name: 'Cookies' }), async () => {
+  await page.getByRole('button', { name: 'Reject all' }).click();
+});
+```
+
+Playwright runs the handler whenever that locator shows up before an action, then continues the action. Register it in a fixture. Better still, stop the banner from appearing by seeding the consent cookie or `storageState`.
+
+Source: interview handbook, not checked against documentation.

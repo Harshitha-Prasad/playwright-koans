@@ -185,7 +185,7 @@ function homePage(notes) {
 
 <section class="band">
   <h2>Topics</h2>
-  <p>One page each: the idea in a few lines, a cheat sheet, and the questions interviewers tend to follow up with. Each answer names the official page it was checked against.</p>
+  <p>One page each: the idea in a few lines, a cheat sheet, and the questions interviewers tend to follow up with. Every answer ends with its source: the official page it was checked against, or a plain statement that it was not checked.</p>
   <table class="topics">
     <tbody>
     ${topics}
@@ -200,14 +200,27 @@ function notePage(note, notes) {
   const index = notes.indexOf(note);
   const previous = notes[index - 1];
   const next = notes[index + 1];
-  const cards = note.questions
-    .map(
-      (question) => `<details class="qa" id="${question.id}">
+  const card = (question) => `<details class="qa" id="${question.id}">
   <summary>${marked.parseInline(question.question)}</summary>
   <div class="qa-answer">${marked.parse(question.answer)}</div>
-</details>`,
-    )
-    .join('\n');
+</details>`;
+  // Questions before the first "###" heading have no group. The rest are shown under their heading.
+  const ungrouped = note.questions.filter((question) => !question.group);
+  const sections = note.groups.map((group, groupIndex) => {
+    const members = note.questions.filter((question) => question.group === group.title);
+    return `<section class="qa-group" id="group-${groupIndex + 1}">
+  <h3>${marked.parseInline(group.title)} <span class="qa-count">${members.length}</span></h3>
+  ${group.intro ? marked.parse(group.intro) : ''}
+  ${members.map(card).join('\n')}
+</section>`;
+  });
+  const jump =
+    note.groups.length > 1
+      ? `<p class="qa-jump">Jump to: ${note.groups
+          .map((group, groupIndex) => `<a href="#group-${groupIndex + 1}">${marked.parseInline(group.title)}</a>`)
+          .join(' · ')}</p>`
+      : '';
+  const cards = [jump, ...ungrouped.map(card), ...sections].join('\n');
 
   return layout({
     file: note.file,
