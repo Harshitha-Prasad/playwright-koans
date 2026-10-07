@@ -15,6 +15,8 @@ import { loadNotes } from './notes.mjs';
 import { locatorChallenges, parityProbes } from './content/locator-challenges.mjs';
 import { jsChallenges } from './content/js-challenges.mjs';
 import { tsChecks } from './content/ts-checks.mjs';
+import { stepChallenges } from './content/step-challenges.mjs';
+import { codeChallenges } from './content/code-challenges.mjs';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const DIST = join(ROOT, 'dist');
@@ -25,9 +27,9 @@ const escapeHtml = (text) =>
 // ---------- layout ----------
 
 const NAV = [
-  { href: 'locators.html', label: 'Locator Gym' },
-  { href: 'javascript.html', label: 'JavaScript' },
-  { href: 'typescript.html', label: 'TypeScript' },
+  { href: 'playground.html', label: 'Playground' },
+  { href: 'javascript.html', label: 'JavaScript quiz' },
+  { href: 'typescript.html', label: 'TypeScript quiz' },
   { href: 'koans.html', label: 'Failing tests' },
   { href: 'learn.html', label: 'Notes' },
   { href: 'interview.html', label: 'Mock interview' },
@@ -90,10 +92,10 @@ function homePage(notes) {
   const questionCount = notes.reduce((sum, note) => sum + note.questions.length, 0);
   const practice = [
     {
-      href: 'locators.html',
-      name: 'Locator Gym',
-      count: `${locatorChallenges.length} challenges`,
-      text: 'Type a Playwright locator and watch what it matches on a real page. Strict-mode violations included.',
+      href: 'playground.html',
+      name: 'Playground',
+      count: `${locatorChallenges.length + stepChallenges.length + codeChallenges.length} challenges`,
+      text: 'Write locators, short Playwright tests and JavaScript functions, and have them run and marked on the spot. Works on a phone.',
     },
     {
       href: 'javascript.html',
@@ -135,20 +137,20 @@ function homePage(notes) {
     file: 'index.html',
     title: site.name,
     wide: true,
-    scripts: ['assets/gym-page.js'],
+    scripts: ['assets/playground-page.js'],
     body: `
 <section class="hero">
   <div class="hero-copy">
     <h1>Practise QA the way interviews ask you to do it.</h1>
     <p class="lede">Hands-on exercises for Playwright, TypeScript, JavaScript and testing fundamentals. They run in your browser, with nothing to install.</p>
     <p class="hero-actions">
-      <a class="button" href="locators.html">Open the Locator Gym</a>
+      <a class="button" href="playground.html">Open the playground</a>
       <a class="button quiet" href="interview.html">Start a mock interview</a>
     </p>
   </div>
   <div class="hero-demo" id="hero-demo">
     <p class="demo-brief"><strong>Try one now.</strong> This locator matches five buttons, so a click would fail. Change it until it matches only the Cold Brew button.</p>
-    <div data-gym="strict-mode" data-compact="true"></div>
+    <div data-playground="strict-mode"></div>
   </div>
 </section>
 
@@ -175,7 +177,7 @@ function homePage(notes) {
     <dt>You answer before you see the answer</dt>
     <dd>Every exercise asks for your attempt first: a locator, a prediction, a yes or no. Recall is what makes it stick.</dd>
     <dt>The code answers are executed, not asserted</dt>
-    <dd>Every locator, snippet and koan solution on this site is run by automated tests on each change. If Playwright or TypeScript changes its behaviour, the build goes red before you read something wrong.</dd>
+    <dd>Every locator, test, snippet and solution on this site is run by automated tests on each change, and the playground is compared with real Playwright. The written answers link to the official documentation they were checked against.</dd>
     <dt>It works with your AI assistant, not against it</dt>
     <dd>The repository ships an interviewer prompt that turns any assistant into the person asking the questions. <a href="ai-interviewer.html">Use AI to examine you</a>.</dd>
   </dl>
@@ -183,7 +185,7 @@ function homePage(notes) {
 
 <section class="band">
   <h2>Topics</h2>
-  <p>One page each: the idea in a few lines, a cheat sheet, and the questions interviewers tend to follow up with.</p>
+  <p>One page each: the idea in a few lines, a cheat sheet, and the questions interviewers tend to follow up with. Each answer names the official page it was checked against.</p>
   <table class="topics">
     <tbody>
     ${topics}
@@ -237,7 +239,7 @@ function learnPage(notes) {
     description: 'One-page notes on Playwright, TypeScript, JavaScript and testing fundamentals, each with interview questions and answers.',
     body: `
 <h1>Notes</h1>
-<p class="lede">One page per topic. Read it in five minutes, then try to answer its questions without looking.</p>
+<p class="lede">One page per topic. Read it in five minutes, then try to answer its questions without looking. Every answer ends with its source.</p>
 <ol class="note-list">
 ${notes
   .map(
@@ -252,23 +254,39 @@ ${notes
   });
 }
 
-function locatorsPage() {
+function playgroundPage() {
   return layout({
-    file: 'locators.html',
-    title: 'Locator Gym',
-    description: 'Practise Playwright locators in your browser: getByRole, getByLabel, filters and strict mode, with instant feedback on a real page.',
+    file: 'playground.html',
+    title: 'Playground',
+    description: 'Practise Playwright locators, test steps and JavaScript in your browser. Your answer is run and marked on the spot, with nothing to install.',
     wide: true,
-    scripts: ['assets/gym-page.js'],
+    scripts: ['assets/playground-page.js'],
     body: `
-<h1>Locator Gym</h1>
-<p class="lede">Type a Playwright locator and see what it matches on the practice page. Aim for locators a user would recognise: roles, labels and text before CSS and XPath.</p>
-<div data-gym="all"></div>
+<h1>Playground</h1>
+<p class="lede">Pick a track, write your answer, and have it checked. Nothing to install, and your progress stays in this browser.</p>
+<div data-playground="all"></div>
 <details class="aside-note">
   <summary>How close is this to real Playwright?</summary>
-  <p>The gym uses a small re-implementation of Playwright's locator rules that runs in your browser. It supports the <code>getBy*</code> methods, <code>locator()</code> with CSS or XPath, <code>filter()</code>, <code>first()</code>, <code>last()</code>, <code>nth()</code>, <code>and()</code> and <code>or()</code>. On every change to this site, automated tests compare it with real Playwright on this practice page. It is still an approximation: for the real thing, <a href="koans.html">run the failing tests</a>.</p>
+  <p><strong>JavaScript track:</strong> your code really runs, in a background worker, against hidden tests. Nothing is imitated.</p>
+  <p><strong>Locators and test steps:</strong> real Playwright cannot run inside a web page, so these two tracks use a small imitation written for this site. It finds elements by Playwright's rules, waits and retries like Playwright, and reports errors in the same words. It supports the <code>getBy*</code> locators, <code>filter()</code>, the common actions (<code>click</code>, <code>fill</code>, <code>check</code>, <code>selectOption</code>, <code>hover</code>, <code>press</code>, <code>setInputFiles</code>), the common assertions, dialogs, <code>page.route()</code> and <code>page.waitForResponse()</code>.</p>
+  <p>On every change to this site, automated tests run each reference answer and each typical mistake twice, once here and once in real Playwright, and fail if the two disagree. It is still an approximation: iframes, new tabs, downloads and traces are not covered. For those, <a href="koans.html">fix the failing tests</a> with the real tool.</p>
 </details>
 `,
   });
+}
+
+function redirectPage(file, target) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Moved</title>
+<meta http-equiv="refresh" content="0; url=${target}">
+<link rel="canonical" href="${target}">
+</head>
+<body><p>This page has moved to <a href="${target}">${target}</a>.</p></body>
+</html>
+`;
 }
 
 function javascriptPage() {
@@ -367,7 +385,7 @@ function koansPage(notes) {
     description: '65 failing Playwright tests in 9 modules, with a demo app included. Fork the repository and make them pass, one concept at a time.',
     body: `
 <h1>Fix failing tests</h1>
-<p class="lede">The exercises on this site run in your browser. This part runs on your machine, with real Playwright: 65 small tests that fail on purpose, and a demo café app for them to run against.</p>
+<p class="lede">The <a href="playground.html">playground</a> runs in your browser. This part runs on your machine, with real Playwright: 65 small tests that fail on purpose, and a demo café app for them to run against.</p>
 
 <h2>How it works</h2>
 <p>Each test isolates one idea. Some have a blank to fill in. Others contain a realistic mistake, such as a hard-coded sleep or a locator that matches five buttons. You make the test pass, and the tool tells you which one is next.</p>
@@ -444,6 +462,8 @@ writeFileSync(
     `export const locatorChallenges = ${JSON.stringify(locatorChallenges)};`,
     `export const jsChallenges = ${JSON.stringify(jsChallenges)};`,
     `export const tsChecks = ${JSON.stringify(tsChecks)};`,
+    `export const stepChallenges = ${JSON.stringify(stepChallenges)};`,
+    `export const codeChallenges = ${JSON.stringify(codeChallenges)};`,
     `export const questions = ${JSON.stringify(questions)};`,
     '',
   ].join('\n'),
@@ -452,7 +472,7 @@ writeFileSync(
 const pages = [
   ['index.html', homePage(notes)],
   ['learn.html', learnPage(notes)],
-  ['locators.html', locatorsPage()],
+  ['playground.html', playgroundPage()],
   ['javascript.html', javascriptPage()],
   ['typescript.html', typescriptPage()],
   ['interview.html', interviewPage()],
@@ -462,12 +482,14 @@ const pages = [
   ...notes.map((note) => [note.file, notePage(note, notes)]),
 ];
 for (const [file, html] of pages) writeFileSync(join(DIST, file), html);
+// The Locator Gym became part of the playground. Old links keep working.
+writeFileSync(join(DIST, 'locators.html'), redirectPage('locators.html', 'playground.html'));
 writeFileSync(join(DIST, '.nojekyll'), '');
 
 // A plain JSON copy of the content. The site tests read it to know what to check.
 writeFileSync(
   join(DIST, 'content.json'),
-  JSON.stringify({ pages: pages.map(([file]) => file), locatorChallenges, parityProbes, jsChallenges, tsChecks, questionCount: questions.length }),
+  JSON.stringify({ pages: pages.map(([file]) => file), locatorChallenges, parityProbes, stepChallenges, codeChallenges, jsChallenges, tsChecks, questionCount: questions.length }),
 );
 
 console.log(`Built ${pages.length} pages, ${questions.length} questions, ${readdirSync(join(DIST, 'assets')).length} assets into dist/`);

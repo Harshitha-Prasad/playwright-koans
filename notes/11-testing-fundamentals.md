@@ -33,35 +33,59 @@ Many fast, focused tests at the bottom (unit), fewer at the service or API level
 **What is the difference between severity and priority?**
 Severity is the impact of the defect on the system: how bad is it. Priority is the urgency of fixing it: how soon. They differ often. A typo in the company name on the home page is low severity and high priority. A crash in a report that one admin runs once a year is high severity and low priority.
 
+Source: ISTQB Foundation Level syllabus (not checked online)
+
 **Regression testing vs retesting?**
 Retesting (confirmation testing) checks that a specific fixed defect is really fixed. Regression testing checks that the change did not break things that worked before. Retesting is planned per defect; regression is a standing suite and the best candidate for automation.
+
+Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)
 
 **Smoke vs sanity testing?**
 A smoke test is a broad, shallow check that a new build is stable enough to test at all: it starts, you can log in, the main pages load. A sanity test is a narrow, deeper check of one area after a small change. In practice teams use the words loosely, so say what you mean by them.
 
+Source: experience, not documentation.
+
 **What makes a good bug report?**
 A title that states the problem, the exact steps to reproduce it, what you expected, what happened, the environment and build, evidence (screenshot, trace, log lines, request ids) and an assessment of impact. The test of a good report: a developer can reproduce it without asking you anything.
+
+Source: ISTQB Foundation Level syllabus (not checked online)
 
 **What would you automate, and what not?**
 Automate what is repeated, stable and valuable: regression of core flows, smoke checks, API contracts, data-driven cases. Do not automate what changes every week, what runs once, what needs human judgement (usability, look and feel), or what costs more to maintain than to do by hand. Exploratory testing stays manual on purpose.
 
+Source: experience, not documentation.
+
 **What is the test pyramid, and where do end-to-end tests fit?**
 A guideline for the shape of an automated suite: most tests at the unit level, some at the API or integration level, few through the UI. End-to-end tests are for the journeys that matter most to the business. Anything that can be checked below the UI should be, because it will be faster and more stable there.
+
+Source: ISTQB Foundation Level syllabus (not checked online)
 
 **What are entry and exit criteria?**
 Entry criteria say when testing can start: build deployed, environment and data ready, smoke test green. Exit criteria say when it can stop: planned tests executed, no open critical defects, agreed coverage reached, known risks accepted by the right person. "We ran out of time" is the exit criterion teams fall back on when they have not defined any.
 
+Source: ISTQB Foundation Level syllabus (not checked online)
+
 **How do you decide how much testing is enough?**
 By risk. Rank features by the likelihood of failure and the damage a failure would do, and spend effort where both are high. Make the remaining risk visible to whoever owns the release decision, because that decision is theirs and not the tester's.
+
+Source: ISTQB Foundation Level syllabus (not checked online)
 
 **What does shift-left mean?**
 Moving testing activities earlier: reviewing requirements and designs, agreeing acceptance criteria before development starts, developers writing unit tests, running automated checks on every commit. Shift-right is its counterpart: learning from production through monitoring, feature flags and canary releases.
 
+Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)
+
 **Functional vs non-functional testing?**
 Functional testing checks what the system does: given this input, that result. Non-functional testing checks how well it does it: speed, load, security, accessibility, usability, reliability. Non-functional requirements are often unwritten, which is a good reason to ask about them early.
+
+Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)
 
 **What is the difference between a test plan, a test strategy and a test case?**
 A strategy describes the approach for an organisation or product: levels, types, tools, environments. A plan applies it to one release or project: scope, schedule, people, risks. A test case is one concrete check with preconditions, steps and an expected result.
 
+Source: ISTQB Foundation Level syllabus (not checked online)
+
 **Black-box vs white-box testing?**
 Black-box tests are designed from the specification, without looking at the code: the techniques in the table above. White-box tests are designed from the structure of the code, aiming at statements, branches and paths. Most QA work is black-box or grey-box, where some knowledge of the internals guides where to look.
+
+Source: [Certified Tester Foundation Level (CTFL) v4.0 Overview](https://www.istqb.org/certifications/certified-tester-foundation-level-ctfl-v4-0/)

@@ -12,6 +12,7 @@ Act as a senior QA engineer interviewing the user. The goal is that the user rec
 - `notes/*.md`: one page per topic. Each ends with an "Interviewers ask" or "Scenarios" section made of a bold question followed by a model answer. Use these as the question bank and as the marking guide.
 - `koans/*.spec.ts`: failing tests the user is working through. `solutions/*.spec.ts` holds a reference answer for each.
 - `site/content/js-challenges.mjs` and `site/content/ts-checks.mjs`: short "predict the output" and "does it compile" snippets with explanations.
+- `site/content/code-challenges.mjs` and `site/content/step-challenges.mjs`: coding tasks with reference solutions, for live-coding questions.
 - `prompts/mock-interviewer.md`: the interview rules. Read it first and follow it.
 
 ## Procedure

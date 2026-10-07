@@ -6,7 +6,7 @@ Hands-on practice for QA engineers: Playwright, TypeScript, JavaScript and testi
 
 There are two ways to use this project, and they share the same content:
 
-- **On the website**, called Red to Green: practise locators in a Locator Gym, predict what JavaScript snippets log, decide whether TypeScript compiles, and run a mock interview over about 100 questions with model answers.
+- **On the website**, called Red to Green: a playground that runs and marks your locators, short Playwright tests and JavaScript functions; quizzes on what JavaScript logs and whether TypeScript compiles; and a mock interview over about 140 questions with model answers and links to the official documentation.
 - **In this repository**: fork it and fix 65 failing Playwright tests on your own machine. The rest of this README is about that part.
 
 ## The failing tests
@@ -79,12 +79,16 @@ Solve those without looking anything up. Wherever you got stuck, do that whole m
 | 06 | Error handling, retries, polling | 6 | [notes/06](notes/06-error-handling-retries.md) |
 | 07 | Debugging: traces, call logs, console and network | 5 | [notes/07](notes/07-debugging.md) |
 | 08 | Reporting and CI | 5 | [notes/08](notes/08-reporting-ci.md) |
-| 09 | Playwright vs Selenium vs Cypress | – | [notes/09](notes/09-playwright-vs-selenium-vs-cypress.md) |
+| 09 | Why Playwright, and how it compares with Selenium | – | [notes/09](notes/09-why-playwright.md) |
 | 10 | TypeScript for testers | – | [notes/10](notes/10-typescript-for-testers.md) |
 | 11 | Testing fundamentals | – | [notes/11](notes/11-testing-fundamentals.md) |
 | 12 | Scenario questions | – | [notes/12](notes/12-scenarios.md) |
+| 13 | Configuration, projects and global setup | – | [notes/13](notes/13-configuration-projects-setup.md) |
+| 14 | Visual, accessibility and emulation testing | – | [notes/14](notes/14-visual-accessibility-emulation.md) |
+| 15 | Playwright and AI: codegen, MCP and test agents | – | [notes/15](notes/15-playwright-and-ai.md) |
+| 16 | JavaScript for test code | – | [notes/16](notes/16-javascript-for-test-code.md) |
 
-Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract.
+Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract. Answers end with a `Source:` line. Where it links to official documentation, the answer was checked against that page in October 2026 (Playwright 1.63). Where it says "experience, not documentation", it is advice, not fact.
 
 ## Commands
 
@@ -139,18 +143,22 @@ The site is static and is generated from the files in this repository, so there 
 | Command | What it does |
 | --- | --- |
 | `npm run site` | Build the site and preview it on http://localhost:4174 |
-| `npm run site:check` | Run every JavaScript snippet and compile every TypeScript snippet shown on the site |
-| `npm run site:test` | Test the site in a browser, including the Locator Gym's engine against real Playwright |
+| `npm run site:check` | Run every JavaScript snippet and coding solution, and compile every TypeScript snippet shown on the site |
+| `npm run site:test` | Test the site in a browser, and compare the playground with real Playwright |
 
 It is published by `.github/workflows/pages.yml` on every push to `main`. One-time setup: in the repository's **Settings → Pages**, set **Source** to **GitHub Actions**.
 
 To change the site's name or the repository link, edit `site/site.config.mjs`.
 
+### How the playground stays honest
+
+Real Playwright cannot run inside a web page, so the playground's locator and test-step tracks use a small imitation (`site/assets/locator-engine.js` and `site/assets/pw-runtime.js`). `npm run site:test` runs every reference answer and every listed mistake twice, once in the imitation and once in real Playwright, and fails if the verdicts or the error headlines differ. The JavaScript track needs no imitation: answers run for real in a Web Worker.
+
 ### Adding content
 
 - **A question:** add it to the `## Interviewers ask` section of a file in `notes/`. A line in bold is the question; everything up to the next bold line is the answer. It appears on the topic page and in the mock interview.
 - **A scenario:** same format, in `notes/12-scenarios.md`. The best ones come from things that happened to you.
-- **A locator challenge, a JavaScript snippet or a TypeScript snippet:** add an entry to the matching file in `site/content/`, then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
+- **A playground challenge or a quiz snippet:** add an entry to the matching file in `site/content/` (`locator-challenges`, `step-challenges`, `code-challenges`, `js-challenges`, `ts-checks`), then run `npm run site:check` and `npm run site:test`. A wrong expected answer fails the build.
 
 ## CI
 

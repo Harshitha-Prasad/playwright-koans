@@ -214,4 +214,207 @@ log(Number('') === 0);`,
     expected: ['true', 'false', 'object', 'undefined', 'true'],
     why: '== converts types before comparing, === does not. typeof null being "object" is a historical bug that cannot be fixed. An empty string converts to 0, which is why validating numeric input with Number() alone lets empty fields through.',
   },
+  {
+    id: 'closure-counter',
+    topic: 'Language',
+    title: 'Closures keep their own state',
+    code: `function makeCounter() {
+  let count = 0;
+  return () => ++count;
+}
+
+const a = makeCounter();
+const b = makeCounter();
+a();
+a();
+
+log(a());
+log(b());`,
+    expected: ['3', '1'],
+    why: 'Each call to makeCounter creates a new count variable, and the returned function keeps access to it. That is a closure. Test helpers built this way, such as a unique-id generator, hold private state without a global variable.',
+  },
+  {
+    id: 'destructuring',
+    topic: 'Language',
+    title: 'Destructuring with defaults',
+    code: `const response = { status: 200, data: { user: { name: 'Ada' } } };
+
+const { status, data: { user: { name, role = 'guest' } } } = response;
+const [first, , third = 'none'] = ['a', 'b'];
+
+log(status);
+log(name);
+log(role);
+log(first + ' ' + third);`,
+    expected: ['200', 'Ada', 'guest', 'a none'],
+    why: 'Destructuring picks values out by name (objects) or position (arrays). A default applies only when the value is undefined. Playwright fixtures rely on this: async ({ page, request }) => {} is object destructuring in a parameter.',
+  },
+  {
+    id: 'this-lost',
+    topic: 'Language',
+    title: 'A method that loses its object',
+    code: `class Cart {
+  constructor() {
+    this.items = ['latte'];
+  }
+  count() {
+    return this.items.length;
+  }
+}
+
+const cart = new Cart();
+const count = cart.count;
+
+try {
+  log(count());
+} catch (error) {
+  log(error.constructor.name);
+}
+log([cart].map((c) => c.count())[0]);`,
+    expected: ['TypeError', '1'],
+    why: 'this is decided by how a function is called, not where it was defined. Calling count() without the object leaves this undefined. Passing a page-object method as a callback has the same effect: wrap it in an arrow function or bind it.',
+  },
+  {
+    id: 'array-search',
+    topic: 'Language',
+    title: 'find, some, every and reduce',
+    code: `const results = [
+  { name: 'login', ms: 120, passed: true },
+  { name: 'cart', ms: 340, passed: false },
+  { name: 'pay', ms: 90, passed: true },
+];
+
+log(results.find((r) => !r.passed).name);
+log(results.some((r) => r.ms > 300));
+log(results.every((r) => r.passed));
+log(results.reduce((total, r) => total + r.ms, 0));
+log(results.find((r) => r.ms > 1000));`,
+    expected: ['cart', 'true', 'false', '550', 'undefined'],
+    why: 'find returns the first match or undefined, which is why chaining .name onto a find that matches nothing throws. some and every answer yes or no. reduce folds the array into one value.',
+  },
+  {
+    id: 'truthiness',
+    topic: 'Language',
+    title: 'Which values are truthy?',
+    code: `const values = [0, '0', '', ' ', null, undefined, NaN, [], {}];
+
+log(values.filter(Boolean).length);
+log(Boolean('false'));
+log(Boolean([]) === Boolean(''));`,
+    expected: ['4', 'true', 'false'],
+    why: "The falsy values are false, 0, '', null, undefined and NaN (plus 0n and -0). Everything else is truthy, including '0', ' ', 'false', empty arrays and empty objects. So if (items) is always true for an array: check items.length.",
+  },
+  {
+    id: 'try-finally',
+    topic: 'Errors',
+    title: 'try, catch and finally in order',
+    code: `const steps = [];
+
+const run = async () => {
+  try {
+    steps.push('try');
+    throw new Error('boom');
+  } catch {
+    steps.push('catch');
+    return 'from catch';
+  } finally {
+    steps.push('finally');
+  }
+};
+
+log(await run());
+log(steps.join(' > '));`,
+    expected: ['from catch', 'try > catch > finally'],
+    why: 'finally runs whether the try block finished, threw or returned, and it runs before the function hands back its value. That makes it the place for cleanup such as deleting test data or closing a connection.',
+  },
+  {
+    id: 'const-mutation',
+    topic: 'Language',
+    title: 'What const protects',
+    code: `const drinks = ['latte'];
+drinks.push('mocha');
+log(drinks.length);
+
+try {
+  drinks = [];
+} catch (error) {
+  log(error.constructor.name);
+}`,
+    expected: ['2', 'TypeError'],
+    why: 'const stops the variable from being reassigned. It does not make the value immutable: arrays and objects declared with const can still be changed. Shared test data needs a fresh copy per test, not just a const.',
+  },
+  {
+    id: 'for-in-of',
+    topic: 'Language',
+    title: 'for...in and for...of',
+    code: `const drinks = ['latte', 'mocha'];
+
+for (const key in drinks) {
+  log(typeof key + ' ' + key);
+}
+for (const drink of drinks) {
+  log(drink);
+}`,
+    expected: ['string 0', 'string 1', 'latte', 'mocha'],
+    why: 'for...in walks over property names, which for an array are the indexes as strings. for...of walks over the values. For arrays you almost always want for...of.',
+  },
+  {
+    id: 'json-roundtrip',
+    topic: 'Language',
+    title: 'What survives JSON',
+    code: `const order = { id: 1, note: undefined, when: new Date(0), price: 4.5 };
+const copy = JSON.parse(JSON.stringify(order));
+
+log('note' in copy);
+log(typeof copy.when);
+log(copy.price === order.price);`,
+    expected: ['false', 'string', 'true'],
+    why: 'JSON has no undefined and no Date: undefined properties are dropped and dates become strings. An API response therefore never deep-equals an object that holds a Date or an undefined field. Compare the string form, or use toMatchObject.',
+  },
+  {
+    id: 'string-number-plus',
+    topic: 'Language',
+    title: 'Template literals and the + operator',
+    code: `const drink = 'latte';
+const quantity = 2;
+
+log(\`\${quantity} x \${drink.toUpperCase()} = €\${(quantity * 4.5).toFixed(2)}\`);
+log('1' + 2 + 3);
+log(1 + 2 + '3');`,
+    expected: ['2 x LATTE = €9.00', '123', '33'],
+    why: 'A template literal evaluates each ${...} and joins the results. With +, a string on either side turns the operation into concatenation, evaluated left to right. Values read from the page are strings: convert them with Number() before doing arithmetic.',
+  },
+  {
+    id: 'float-precision',
+    topic: 'Language',
+    title: 'Comparing prices',
+    code: `log(0.1 + 0.2 === 0.3);
+log((0.1 + 0.2).toFixed(2));
+log(Math.abs(0.1 + 0.2 - 0.3) < 0.001);`,
+    expected: ['false', '0.30', 'true'],
+    why: 'Floating point numbers cannot represent 0.1 or 0.2 exactly, so the sum is 0.30000000000000004. Assert on money with toBeCloseTo, with a formatted string, or in whole cents.',
+  },
+  {
+    id: 'parse-numbers',
+    topic: 'Language',
+    title: 'Turning text into numbers',
+    code: `log(parseInt('42px'));
+log(Number('42px'));
+log(Number('€4.10'.replace('€', '')));
+log(typeof NaN);`,
+    expected: ['42', 'NaN', '4.1', 'number'],
+    why: 'parseInt reads digits until it meets something else. Number converts the whole string or gives NaN. NaN is of type number and is not equal to anything, itself included, so check it with Number.isNaN.',
+  },
+  {
+    id: 'map-async',
+    topic: 'Async',
+    title: 'map with an async callback',
+    code: `const ids = [1, 2, 3];
+const results = ids.map(async (id) => id * 2);
+
+log(results[0] instanceof Promise);
+log((await Promise.all(results)).join(','));`,
+    expected: ['true', '2,4,6'],
+    why: 'An async callback returns a promise, so map produces an array of promises, not of values. Promise.all turns it into the values. Forgetting that step is why a filter or an assertion on "the results" silently sees promises.',
+  },
 ];

@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Koans Café practice page</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 0 16px 24px; background: #fff; color: #1d2030; font: 14px/1.45 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+      header, footer { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 0; }
+      header { border-bottom: 1px solid #dfe3ea; }
+      footer { margin-top: 16px; border-top: 1px solid #dfe3ea; color: #5b6078; }
+      h1 { margin: 0; font-size: 18px; }
+      h2 { margin: 0 0 8px; font-size: 15px; }
+      h3 { margin: 0; font-size: 14px; }
+      nav a, footer a { margin-right: 12px; color: #2b3fb8; }
+      section { margin: 14px 0; padding: 12px; border: 1px solid #dfe3ea; border-radius: 8px; }
+      label { display: block; margin: 6px 0 2px; }
+      label.inline { display: inline-block; margin-right: 12px; }
+      input[type='email'], input[type='password'] { width: 100%; max-width: 260px; padding: 6px 8px; border: 1px solid #c3c9d6; border-radius: 5px; font: inherit; }
+      button { padding: 5px 10px; border: 1px solid #1d2030; border-radius: 5px; background: #1d2030; color: #fff; font: inherit; cursor: pointer; }
+      form button { margin-top: 10px; }
+      .promo { margin-bottom: 8px; padding: 6px 10px; background: #fff3c4; border-radius: 5px; }
+      ul.products { margin: 0; padding-left: 18px; }
+      ul.products li { margin: 6px 0; }
+      ul.products li > * { display: inline-block; margin-right: 10px; vertical-align: middle; }
+      fieldset { border: 1px solid #dfe3ea; border-radius: 5px; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 5px 6px; border-bottom: 1px solid #dfe3ea; text-align: left; }
+      select { padding: 5px 8px; border: 1px solid #c3c9d6; border-radius: 5px; font: inherit; }
+      button:disabled { background: #b9bfcc; border-color: #b9bfcc; cursor: not-allowed; }
+      output, [role='status'], [data-out] { display: block; min-height: 1.4em; margin-top: 6px; font-weight: 600; color: #0f7d54; }
+      [role='alert'] { color: #c2362b; font-weight: 600; }
+      .menu-wrap { position: relative; display: inline-block; }
+      .menu-wrap [role='menu'] { position: absolute; left: 0; top: 100%; padding: 6px; background: #fff; border: 1px solid #c3c9d6; border-radius: 5px; }
+      .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28'%3E%3Crect width='28' height='28' rx='6' fill='%231d2030'/%3E%3Cpath d='M7 10h12v6a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z' fill='%23ffd43b'/%3E%3C/svg%3E" alt="Koans Café logo" width="28" height="28" />
+      <h1>Koans Café</h1>
+      <span title="Opening hours">Mon–Sat, 8:00–18:00</span>
+      <nav aria-label="Main">
+        <a href="#menu">Menu</a>
+        <a href="#orders">Orders</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <section aria-labelledby="signin-heading">
+        <h2 id="signin-heading">Sign in</h2>
+        <form>
+          <label for="email">Email address</label>
+          <input id="email" type="email" autocomplete="off" />
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="Your password" />
+          <div><label class="inline"><input type="checkbox" /> Remember me</label></div>
+          <button type="submit">Sign in</button>
+        </form>
+        <p role="status" id="signin-status"></p>
+      </section>
+
+      <section aria-labelledby="menu-heading" id="menu">
+        <h2 id="menu-heading">Menu</h2>
+        <div class="promo">New: Double Espresso!</div>
+        <ul aria-label="Menu" class="products">
+          <li data-testid="product-card"><h3>Espresso</h3><span class="price">€2.20</span><button type="button">Add to cart</button></li>
+          <li data-testid="product-card"><h3>Double Espresso</h3><span class="price">€2.90</span><button type="button">Add to cart</button></li>
+          <li data-testid="product-card"><h3>Flat White</h3><span class="price">€3.50</span><button type="button">Add to cart</button></li>
+          <li data-testid="product-card"><h3>Cappuccino</h3><span class="price">€3.80</span><button type="button">Add to cart</button></li>
+          <li data-testid="product-card"><h3>Cold Brew</h3><span class="price">€4.10</span><button type="button">Add to cart</button></li>
+        </ul>
+        <p>Items in your cart: <span data-testid="cart-count">0</span></p>
+        <ul aria-label="Cart" id="cart"></ul>
+      </section>
+
+      <section aria-labelledby="options-heading">
+        <h2 id="options-heading">Options</h2>
+        <fieldset>
+          <legend>Milk</legend>
+          <label class="inline"><input type="radio" name="milk" checked /> Whole</label>
+          <label class="inline"><input type="radio" name="milk" /> Oat</label>
+          <label class="inline"><input type="radio" name="milk" /> None</label>
+        </fieldset>
+        <div><label class="inline"><input type="checkbox" id="to-go" /> To go</label></div>
+        <label for="size">Size</label>
+        <select id="size">
+          <option>Small</option>
+          <option selected>Medium</option>
+          <option>Large</option>
+        </select>
+        <p data-testid="options-output" data-out>Milk: Whole, size: Medium, to go: no</p>
+      </section>
+
+      <section aria-labelledby="orders-heading" id="orders">
+        <h2 id="orders-heading">Orders</h2>
+        <table>
+          <thead>
+            <tr><th>Customer</th><th>Drink</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Ada</td><td>Flat White</td><td>Preparing</td><td><button type="button">Cancel</button></td></tr>
+            <tr><td>Grace</td><td>Cappuccino</td><td>Preparing</td><td><button type="button">Cancel</button></td></tr>
+            <tr><td>Linus</td><td>Cold Brew</td><td>Ready</td><td><button type="button">Cancel</button></td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section aria-labelledby="specials-heading">
+        <h2 id="specials-heading">Today's specials</h2>
+        <button type="button" id="load-specials">Load specials</button>
+        <p data-testid="specials-status" data-out></p>
+        <ul aria-label="Specials" id="specials"></ul>
+      </section>
+
+      <section aria-labelledby="payment-heading">
+        <h2 id="payment-heading">Payment</h2>
+        <button type="button" id="pay" disabled>Pay now</button>
+        <button type="button" id="start-order">Start order</button>
+        <p data-testid="payment-status" data-out></p>
+        <p data-testid="order-status" data-out>No order yet</p>
+      </section>
+
+      <section aria-labelledby="account-heading">
+        <h2 id="account-heading">Account</h2>
+        <div class="menu-wrap" id="account-menu">
+          <button type="button" aria-haspopup="menu">Account</button>
+          <div role="menu" hidden>
+            <button type="button" role="menuitem" id="sign-out">Sign out</button>
+          </div>
+        </div>
+        <button type="button" id="save-prefs">Save preferences</button>
+        <button type="button" id="delete-order">Delete order</button>
+        <button type="button" id="rename-order">Rename order</button>
+        <p data-testid="account-output" data-out>Signed in as Ada</p>
+        <p data-testid="dialog-output" data-out>Nothing happened yet</p>
+        <div id="toast-area"></div>
+      </section>
+
+      <section aria-labelledby="upload-heading">
+        <h2 id="upload-heading">Receipt</h2>
+        <label for="receipt">Upload receipt</label>
+        <input type="file" id="receipt" />
+        <p data-testid="upload-output" data-out>No file chosen</p>
+      </section>
+    </main>
+
+    <footer id="contact">
+      <span>Koans Café, Harbour Street 1</span>
+      <a href="#contact">Contact</a>
+      <a href="#imprint">Imprint</a>
+    </footer>
+
+    <script>
+      // Links and forms never leave the page.
+      document.addEventListener('click', (event) => {
+        if (event.target.closest('a')) event.preventDefault();
+      });
+
+      const byId = (id) => document.getElementById(id);
+      const byTestId = (id) => document.querySelector(`[data-testid="${id}"]`);
+
+      // Sign in
+      document.querySelector('form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        byId('signin-status').textContent = `Welcome back, ${byId('email').value}`;
+      });
+
+      // Menu and cart
+      for (const card of document.querySelectorAll('[data-testid="product-card"]')) {
+        card.querySelector('button').addEventListener('click', () => {
+          const item = document.createElement('li');
+          item.textContent = card.querySelector('h3').textContent;
+          byId('cart').append(item);
+          byTestId('cart-count').textContent = String(byId('cart').children.length);
+        });
+      }
+
+      // Options
+      const renderOptions = () => {
+        const milk = document.querySelector('input[name="milk"]:checked').closest('label').textContent.trim();
+        byTestId('options-output').textContent = `Milk: ${milk}, size: ${byId('size').value}, to go: ${byId('to-go').checked ? 'yes' : 'no'}`;
+      };
+      for (const control of document.querySelectorAll('input[name="milk"], #to-go, #size')) {
+        control.addEventListener('change', renderOptions);
+      }
+
+      // Orders table
+      for (const row of document.querySelectorAll('tbody tr')) {
+        row.querySelector('button').addEventListener('click', (event) => {
+          row.children[2].textContent = 'Cancelled';
+          event.target.disabled = true;
+        });
+      }
+
+      // Specials: fetched from a file, and deliberately slow (about 1.2 seconds).
+      byId('load-specials').addEventListener('click', async () => {
+        const list = byId('specials');
+        const status = byTestId('specials-status');
+        list.replaceChildren();
+        status.removeAttribute('role');
+        status.textContent = 'Loading…';
+        try {
+          const response = await fetch('specials.json');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const specials = await response.json();
+          await new Promise((resolve) => setTimeout(resolve, 1200));
+          for (const special of specials) {
+            const item = document.createElement('li');
+            item.textContent = `${special.name}, €${special.price.toFixed(2)}`;
+            list.append(item);
+          }
+          status.textContent = specials.length === 0 ? 'No specials today' : '';
+        } catch {
+          status.setAttribute('role', 'alert');
+          status.textContent = 'Could not load specials';
+        }
+      });
+
+      // Payment: the button is disabled for the first second.
+      setTimeout(() => (byId('pay').disabled = false), 1000);
+      byId('pay').addEventListener('click', () => {
+        byTestId('payment-status').textContent = 'Payment received';
+      });
+
+      // Order tracker: the text changes 1.5 seconds after the click.
+      byId('start-order').addEventListener('click', () => {
+        byTestId('order-status').textContent = 'Preparing…';
+        setTimeout(() => (byTestId('order-status').textContent = 'Ready for pickup'), 1500);
+      });
+
+      // Account menu: only visible while the pointer is over it.
+      const menu = byId('account-menu');
+      menu.addEventListener('mouseenter', () => (menu.querySelector('[role="menu"]').hidden = false));
+      menu.addEventListener('mouseleave', () => (menu.querySelector('[role="menu"]').hidden = true));
+      byId('sign-out').addEventListener('click', () => {
+        byTestId('account-output').textContent = 'Signed out';
+      });
+
+      // A toast that appears after 0.4 seconds and removes itself 1.5 seconds later.
+      byId('save-prefs').addEventListener('click', () => {
+        setTimeout(() => {
+          const toast = document.createElement('div');
+          toast.setAttribute('role', 'alert');
+          toast.textContent = 'Preferences saved';
+          byId('toast-area').append(toast);
+          setTimeout(() => toast.remove(), 1500);
+        }, 400);
+      });
+
+      // Native dialogs
+      byId('delete-order').addEventListener('click', () => {
+        byTestId('dialog-output').textContent = confirm('Delete order #1042?') ? 'Order deleted' : 'Order kept';
+      });
+      byId('rename-order').addEventListener('click', () => {
+        const name = prompt('New order name');
+        byTestId('dialog-output').textContent = name ? `Renamed to ${name}` : 'Rename cancelled';
+      });
+
+      // Upload
+      byId('receipt').addEventListener('change', (event) => {
+        const [file] = event.target.files;
+        byTestId('upload-output').textContent = file ? `${file.name} (${file.size} bytes)` : 'No file chosen';
+      });
+    </script>
+  </body>
+</html>

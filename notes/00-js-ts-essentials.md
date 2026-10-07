@@ -30,20 +30,34 @@ const tip = order.tip ?? 1;
 **What happens if you forget `await` in front of `page.click()`?**
 The click is started but the test does not wait for it. The next line runs immediately, so later steps race against it. Typical symptoms: an assertion that fails intermittently, or an error such as "Target page, context or browser has been closed" after the test has already ended. The lint rule `@typescript-eslint/no-floating-promises` catches it.
 
+Source: [async function - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function)
+
 **Why does `expect(locator).toBeVisible()` need `await` when `expect(2).toBe(2)` does not?**
 The first is a web-first assertion: it polls the page until the condition holds or the timeout expires, which is asynchronous. The second compares two values that already exist.
+
+Source: [Assertions | Playwright](https://playwright.dev/docs/test-assertions)
 
 **`Promise.all` vs `allSettled` vs `race` vs `any`?**
 `all`: resolves with every result, rejects as soon as one rejects. `allSettled`: never rejects, gives `{status, value | reason}` per promise. `race`: settles with whichever promise settles first, success or failure. `any`: resolves with the first success, rejects only if all fail.
 
+Source: [Promise - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise#promise_concurrency)
+
 **Why is `forEach` with an async callback a bug?**
 `forEach` ignores the promises its callback returns. Use `for...of` with `await` for sequential work, or `await Promise.all(items.map(async ...))` for concurrent work.
+
+Source: [Array.prototype.forEach() - JavaScript | MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/forEach)
 
 **`interface` or `type`?**
 Both describe object shapes. Interfaces can be extended and merged across declarations. Type aliases can also name unions, tuples and mapped types. A common convention: `interface` for object shapes you expect to extend, `type` for everything else.
 
+Source: [TypeScript: Documentation - Everyday Types](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#differences-between-type-aliases-and-interfaces)
+
 **`any` vs `unknown`?**
 `any` switches type checking off. `unknown` accepts any value but makes you narrow it (with `typeof`, `in`, a type guard) before you use it.
 
+Source: [TypeScript: Documentation - More on Functions](https://www.typescriptlang.org/docs/handbook/2/functions.html#unknown)
+
 **Does Playwright type-check my tests?**
 No. It strips the types and runs the JavaScript. A type error only fails the build if you run `tsc --noEmit` yourself, usually as a CI step before the tests.
+
+Source: [TypeScript | Playwright](https://playwright.dev/docs/test-typescript)

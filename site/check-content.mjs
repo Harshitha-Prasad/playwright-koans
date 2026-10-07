@@ -4,6 +4,11 @@
 //   2. Every "does it compile?" snippet goes through the TypeScript compiler in strict mode and
 //      must compile, or fail to, as `compiles` says.
 //   3. Every note parses and has questions.
+//   4. Every solution in the playground's JavaScript track passes its hidden tests, and no
+//      starter does.
+//
+// The playground's locator and test-step tracks need a browser. They are checked, against real
+// Playwright, by `npm run site:test`.
 
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
@@ -12,7 +17,9 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { runCodeChallenge } from './assets/run-code.js';
 import { runSnippet } from './assets/run-snippet.js';
+import { codeChallenges } from './content/code-challenges.mjs';
 import { jsChallenges } from './content/js-challenges.mjs';
 import { tsChecks } from './content/ts-checks.mjs';
 import { loadNotes } from './notes.mjs';
@@ -59,9 +66,21 @@ for (const note of notes) {
   }
 }
 
+// 4. JavaScript track of the playground
+for (const challenge of codeChallenges) {
+  const solved = await runCodeChallenge(challenge.solution, challenge);
+  const failing = solved.results.filter((result) => !result.ok);
+  if (solved.error) problems.push(`code "${challenge.id}": the solution does not load: ${solved.error}`);
+  for (const result of failing) problems.push(`code "${challenge.id}": the solution fails "${result.name}": ${result.message}`);
+  const untouched = await runCodeChallenge(challenge.starter, challenge);
+  if (!untouched.error && untouched.results.every((result) => result.ok)) problems.push(`code "${challenge.id}": the starter code already passes every test`);
+}
+
 if (problems.length > 0) {
   console.error(`Content check failed:\n- ${problems.join('\n- ')}`);
   process.exit(1);
 }
 const questionCount = notes.reduce((sum, note) => sum + note.questions.length, 0);
-console.log(`Content check passed: ${jsChallenges.length} JavaScript snippets, ${tsChecks.length} TypeScript snippets, ${questionCount} questions in ${notes.length} notes.`);
+console.log(
+  `Content check passed: ${jsChallenges.length} JavaScript snippets, ${tsChecks.length} TypeScript snippets, ${codeChallenges.length} coding challenges, ${questionCount} questions in ${notes.length} notes.`,
+);

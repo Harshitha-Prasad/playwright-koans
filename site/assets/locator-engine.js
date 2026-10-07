@@ -2,6 +2,8 @@
 // browser with nothing installed. It covers the getBy* methods, locator() with CSS or XPath,
 // filter(), first/last/nth, and()/or(). It is checked against real Playwright in
 // site/tests/site.spec.ts, but it is an approximation: the koans in this repo run the real thing.
+//
+// This file only finds elements. Actions and assertions live in pw-runtime.js, which builds on it.
 
 const SKIPPED_FOR_TEXT = new Set(['SCRIPT', 'STYLE', 'NOSCRIPT']);
 
@@ -14,14 +16,9 @@ const NAME_FROM_CONTENT = new Set([
 
 const LABELABLE = new Set(['BUTTON', 'METER', 'OUTPUT', 'PROGRESS', 'SELECT', 'TEXTAREA']);
 
-const ACTIONS = [
-  'click', 'dblclick', 'fill', 'check', 'uncheck', 'hover', 'press', 'type', 'selectOption',
-  'setInputFiles', 'focus', 'tap', 'textContent', 'innerText', 'isVisible', 'count', 'all',
-];
+export const normalise = (text) => (text ?? '').replace(/\s+/g, ' ').trim();
 
-const normalise = (text) => (text ?? '').replace(/\s+/g, ' ').trim();
-
-function elementText(element) {
+export function elementText(element) {
   if (SKIPPED_FOR_TEXT.has(element.nodeName)) return '';
   if (element.nodeName === 'INPUT' && ['button', 'submit', 'reset'].includes(element.type)) return element.value;
   let text = '';
@@ -33,7 +30,7 @@ function elementText(element) {
 }
 
 /** Builds a predicate from a string or RegExp, the way getByText and friends interpret it. */
-function textMatcher(expected, exact) {
+export function textMatcher(expected, exact) {
   if (expected instanceof RegExp) return (text) => new RegExp(expected.source, expected.flags.replace('g', '')).test(text);
   const wanted = normalise(String(expected));
   if (exact) return (text) => normalise(text) === wanted;
@@ -41,7 +38,7 @@ function textMatcher(expected, exact) {
   return (text) => normalise(text).toLowerCase().includes(lower);
 }
 
-function isHiddenForAria(element) {
+export function isHiddenForAria(element) {
   const view = element.ownerDocument.defaultView;
   if (view.getComputedStyle(element).visibility !== 'visible') return true;
   for (let node = element; node && node.nodeType === 1; node = node.parentElement) {
@@ -69,14 +66,14 @@ function implicitRole(element) {
       return element.getAttribute('alt') === '' && !hasExplicitName(element) && !element.title ? 'presentation' : 'img';
     case 'input': {
       const type = (element.getAttribute('type') ?? 'text').toLowerCase();
-      if (['button', 'image', 'reset', 'submit'].includes(type)) return 'button';
+      if (['button', 'file', 'image', 'reset', 'submit'].includes(type)) return 'button'; // Playwright counts a file input as a button
       if (type === 'checkbox' || type === 'radio') return type;
       if (type === 'range') return 'slider';
       if (type === 'number') return 'spinbutton';
       if (type === 'search') return element.hasAttribute('list') ? 'combobox' : 'searchbox';
       if (['email', 'tel', 'text', 'url'].includes(type)) return element.hasAttribute('list') ? 'combobox' : 'textbox';
       if (type === 'password') return 'textbox'; // no ARIA role in the spec, but Playwright treats it as a textbox
-      return null; // file, date, colour, hidden… have no role
+      return null; // date, colour, hidden… have no role
     }
     case 'textarea':
       return 'textbox';
@@ -214,16 +211,38 @@ function inDocumentOrder(elements) {
   return unique.sort((a, b) => (a === b ? 0 : a.compareDocumentPosition(b) & 4 ? -1 : 1));
 }
 
-class GymLocator {
-  constructor(doc, steps, used) {
+/** Formats a value the way it would be written in test code, for locator descriptions. */
+export function show(value) {
+  if (value instanceof GymLocator) return value.toString();
+  if (value instanceof RegExp) return String(value);
+  if (typeof value === 'string') return `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+  if (Array.isArray(value)) return `[${value.map(show).join(', ')}]`;
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value).filter(([, entry]) => entry !== undefined);
+    return entries.length ? `{ ${entries.map(([key, entry]) => `${key}: ${show(entry)}`).join(', ')} }` : '{}';
+  }
+  return String(value);
+}
+
+const call = (name, ...args) => {
+  const shown = args.filter((arg) => arg !== undefined).map(show);
+  return `${name}(${shown.join(', ')})`;
+};
+
+export class GymLocator {
+  /**
+   * @param doc    the document to search
+   * @param steps  functions that each turn a list of scopes into a list of elements
+   * @param used   names of the locator methods used so far (for feedback on locator quality)
+   * @param parts  the calls that built this locator, as text, for error messages
+   * @param context  shared state of a test run; undefined when only locating
+   */
+  constructor(doc, steps = [], used = new Set(), parts = [], context = undefined) {
     this._doc = doc;
     this._steps = steps;
     this._used = used;
-    for (const action of ACTIONS) {
-      this[action] = () => {
-        throw new Error(`Leave out .${action}(): type only the locator. The gym shows what it matches.`);
-      };
-    }
+    this._parts = parts;
+    this._context = context;
   }
 
   /** The elements this locator matches right now, in document order. */
@@ -238,34 +257,49 @@ class GymLocator {
     return [...this._used];
   }
 
-  _then(name, step, extraUsed = []) {
-    return new GymLocator(this._doc, [...this._steps, step], new Set([...this._used, name, ...extraUsed]));
+  /** The locator as it would be written in a test, without the leading "page.". */
+  toString() {
+    return this._parts.join('.');
   }
 
-  _query(name, matchesElement) {
-    return this._then(name, (scopes) =>
-      inDocumentOrder(scopes.flatMap((scope) => descendants(scope).filter(matchesElement))),
+  _then(name, step, description, extraUsed = []) {
+    return new this.constructor(
+      this._doc,
+      [...this._steps, step],
+      new Set([...this._used, name, ...extraUsed]),
+      [...this._parts, description],
+      this._context,
+    );
+  }
+
+  _query(name, description, matchesElement) {
+    return this._then(
+      name,
+      (scopes) => inDocumentOrder(scopes.flatMap((scope) => descendants(scope).filter(matchesElement))),
+      description,
     );
   }
 
   getByRole(role, options = {}) {
-    if (typeof role !== 'string') throw new Error('getByRole needs a role name, for example getByRole(\'button\')');
+    if (typeof role !== 'string') throw new Error("getByRole needs a role name, for example getByRole('button')");
     const nameMatches = options.name === undefined ? null : textMatcher(options.name, options.exact);
-    return this._query('getByRole', (element) => {
+    const description = call('getByRole', role, Object.keys(options).length ? options : undefined);
+    return this._query('getByRole', description, (element) => {
       if (roleOf(element) !== role) return false;
       if (!options.includeHidden && isHiddenForAria(element)) return false;
       if (options.level !== undefined && Number(element.getAttribute('aria-level') ?? element.localName.slice(1)) !== options.level) return false;
       if (options.checked !== undefined && !!element.checked !== options.checked && String(options.checked) !== element.getAttribute('aria-checked')) return false;
       if (options.disabled !== undefined && !!element.disabled !== options.disabled) return false;
       if (options.expanded !== undefined && String(options.expanded) !== element.getAttribute('aria-expanded')) return false;
+      if (options.pressed !== undefined && String(options.pressed) !== element.getAttribute('aria-pressed')) return false;
       if (options.selected !== undefined && !!element.selected !== options.selected) return false;
       return nameMatches ? nameMatches(accessibleName(element, role)) : true;
     });
   }
 
-  getByText(text, options = {}) {
-    const matches = textMatcher(text, options.exact);
-    return this._query('getByText', (element) => {
+  getByText(text, options) {
+    const matches = textMatcher(text, options?.exact);
+    return this._query('getByText', call('getByText', text, options), (element) => {
       if (SKIPPED_FOR_TEXT.has(element.nodeName) || element.closest('head')) return false;
       if (!matches(elementText(element))) return false;
       // Only the innermost element that contains the text counts.
@@ -273,14 +307,14 @@ class GymLocator {
     });
   }
 
-  getByLabel(text, options = {}) {
-    const matches = textMatcher(text, options.exact);
-    return this._query('getByLabel', (element) => labelsOf(element).some((label) => matches(label)));
+  getByLabel(text, options) {
+    const matches = textMatcher(text, options?.exact);
+    return this._query('getByLabel', call('getByLabel', text, options), (element) => labelsOf(element).some((label) => matches(label)));
   }
 
-  _byAttribute(method, attribute, value, options = {}) {
-    const matches = textMatcher(value, options.exact);
-    return this._query(method, (element) => element.hasAttribute(attribute) && matches(element.getAttribute(attribute)));
+  _byAttribute(method, attribute, value, options) {
+    const matches = textMatcher(value, options?.exact);
+    return this._query(method, call(method, value, options), (element) => element.hasAttribute(attribute) && matches(element.getAttribute(attribute)));
   }
 
   getByPlaceholder(text, options) {
@@ -297,38 +331,44 @@ class GymLocator {
 
   getByTestId(testId) {
     const matches = testId instanceof RegExp ? textMatcher(testId) : (value) => value === String(testId);
-    return this._query('getByTestId', (element) => element.hasAttribute('data-testid') && matches(element.getAttribute('data-testid')));
+    return this._query('getByTestId', call('getByTestId', testId), (element) => element.hasAttribute('data-testid') && matches(element.getAttribute('data-testid')));
   }
 
   locator(selector, options) {
     if (selector instanceof GymLocator) {
-      return this._then('locator', (scopes) => inDocumentOrder(scopes.flatMap((scope) => selector.resolve([scope]))), selector.used);
+      return this._then('locator', (scopes) => inDocumentOrder(scopes.flatMap((scope) => selector.resolve([scope]))), call('locator', selector), selector.used);
     }
     if (typeof selector !== 'string') throw new Error('locator() needs a CSS or XPath selector as a string');
+    const description = call('locator', selector);
     let chained;
     if (selector.startsWith('xpath=') || selector.startsWith('//') || selector.startsWith('..')) {
       const expression = selector.replace(/^xpath=/, '');
-      chained = this._then('xpath', (scopes) =>
-        inDocumentOrder(
-          scopes.flatMap((scope) => {
-            const found = [];
-            // Like Playwright, a leading "/" is evaluated relative to the scope.
-            const relative = expression.startsWith('/') ? `.${expression}` : expression;
-            const result = this._doc.evaluate(relative, scope, null, 7, null);
-            for (let index = 0; index < result.snapshotLength; index += 1) {
-              if (result.snapshotItem(index).nodeType === 1) found.push(result.snapshotItem(index));
-            }
-            return found;
-          }),
-        ),
+      chained = this._then(
+        'xpath',
+        (scopes) =>
+          inDocumentOrder(
+            scopes.flatMap((scope) => {
+              const found = [];
+              // Like Playwright, a leading "/" is evaluated relative to the scope.
+              const relative = expression.startsWith('/') ? `.${expression}` : expression;
+              const result = this._doc.evaluate(relative, scope, null, 7, null);
+              for (let index = 0; index < result.snapshotLength; index += 1) {
+                if (result.snapshotItem(index).nodeType === 1) found.push(result.snapshotItem(index));
+              }
+              return found;
+            }),
+          ),
+        description,
       );
     } else if (/^[a-z:-]+=/.test(selector) && !selector.startsWith('css=')) {
-      throw new Error(`The "${selector.split('=')[0]}=" selector engine is not available in the gym. Use a getBy* method.`);
+      throw new Error(`The "${selector.split('=')[0]}=" selector engine is not available here. Use a getBy* method.`);
     } else {
       const css = selector.replace(/^css=/, '');
       const positional = /:nth-|:first-|:last-/.test(css);
-      chained = this._then(positional ? 'positional css' : 'css', (scopes) =>
-        inDocumentOrder(scopes.flatMap((scope) => [...scope.querySelectorAll(css)])),
+      chained = this._then(
+        positional ? 'positional css' : 'css',
+        (scopes) => inDocumentOrder(scopes.flatMap((scope) => [...scope.querySelectorAll(css)])),
+        description,
       );
     }
     return options ? chained.filter(options) : chained;
@@ -336,30 +376,44 @@ class GymLocator {
 
   filter(options = {}) {
     let result = this;
+    const description = call('filter', options);
+    const add = (step, extraUsed) => {
+      // Only the first step of a combined filter carries the description.
+      result = result._then('filter', step, result === this ? description : null, extraUsed);
+    };
     if (options.hasText !== undefined) {
       const matches = textMatcher(options.hasText, false);
-      result = result._then('filter', (elements) => elements.filter((element) => matches(elementText(element))));
+      add((elements) => elements.filter((element) => matches(elementText(element))));
     }
     if (options.hasNotText !== undefined) {
       const matches = textMatcher(options.hasNotText, false);
-      result = result._then('filter', (elements) => elements.filter((element) => !matches(elementText(element))));
+      add((elements) => elements.filter((element) => !matches(elementText(element))));
     }
     if (options.has !== undefined) {
       const inner = options.has;
-      result = result._then('filter', (elements) => elements.filter((element) => inner.resolve([element]).length > 0), inner.used);
+      add((elements) => elements.filter((element) => inner.resolve([element]).length > 0), inner.used);
     }
     if (options.hasNot !== undefined) {
       const inner = options.hasNot;
-      result = result._then('filter', (elements) => elements.filter((element) => inner.resolve([element]).length === 0), inner.used);
+      add((elements) => elements.filter((element) => inner.resolve([element]).length === 0), inner.used);
     }
+    if (options.visible !== undefined) {
+      add((elements) => elements.filter((element) => isVisible(element) === options.visible));
+    }
+    result._parts = result._parts.filter((part) => part !== null);
     return result;
   }
 
   nth(index) {
-    return this._then('nth', (elements) => {
-      const picked = index < 0 ? elements[elements.length + index] : elements[index];
-      return picked ? [picked] : [];
-    });
+    const description = index === 0 ? 'first()' : index === -1 ? 'last()' : call('nth', index);
+    return this._then(
+      'nth',
+      (elements) => {
+        const picked = index < 0 ? elements[elements.length + index] : elements[index];
+        return picked ? [picked] : [];
+      },
+      description,
+    );
   }
 
   first() {
@@ -371,14 +425,19 @@ class GymLocator {
   }
 
   and(other) {
-    return this._then('and', (elements) => {
-      const others = new Set(other.resolve());
-      return elements.filter((element) => others.has(element));
-    }, other.used);
+    return this._then(
+      'and',
+      (elements) => {
+        const others = new Set(other.resolve());
+        return elements.filter((element) => others.has(element));
+      },
+      call('and', other),
+      other.used,
+    );
   }
 
   or(other) {
-    return this._then('or', (elements) => inDocumentOrder([...elements, ...other.resolve()]), other.used);
+    return this._then('or', (elements) => inDocumentOrder([...elements, ...other.resolve()]), call('or', other), other.used);
   }
 
   frameLocator() {
@@ -386,9 +445,33 @@ class GymLocator {
   }
 }
 
+/** Playwright's idea of visible: a non-empty box and no visibility:hidden. */
+export function isVisible(element) {
+  if (!element.isConnected) return false;
+  const style = element.ownerDocument.defaultView.getComputedStyle(element);
+  if (style.visibility !== 'visible') return false;
+  const box = element.getBoundingClientRect();
+  return box.width > 0 && box.height > 0;
+}
+
+const ACTIONS = [
+  'click', 'dblclick', 'fill', 'clear', 'check', 'uncheck', 'setChecked', 'hover', 'press', 'pressSequentially',
+  'type', 'selectOption', 'setInputFiles', 'focus', 'blur', 'tap', 'textContent', 'innerText', 'inputValue',
+  'getAttribute', 'isVisible', 'isHidden', 'isEnabled', 'isDisabled', 'isChecked', 'count', 'all',
+  'allTextContents', 'allInnerTexts', 'waitFor',
+];
+
+/** A locator that can only locate: used where the exercise is the locator itself. */
+class LocateOnly extends GymLocator {}
+for (const action of ACTIONS) {
+  LocateOnly.prototype[action] = function leaveOut() {
+    throw new Error(`Leave out .${action}(): type only the locator. The page shows what it matches.`);
+  };
+}
+
 /** Returns an object that behaves like Playwright's `page` for building locators against `doc`. */
 export function createPage(doc) {
-  return new GymLocator(doc, [], new Set());
+  return new LocateOnly(doc);
 }
 
 /**
@@ -409,6 +492,7 @@ export function evaluateLocator(source, doc) {
     throw error;
   }
   if (!(value instanceof GymLocator)) throw new Error('That expression is not a locator. Start with page.');
+  if (value.toString() === '') throw new Error('Add a locator method after page, for example page.getByRole(...)');
   return value;
 }
 
