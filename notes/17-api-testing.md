@@ -4,7 +4,7 @@ No koans here. HTTP and REST, what to test in an API, Postman, and the code you 
 
 ## Status codes at a glance
 
-200 OK · 201 Created · 204 No Content · 301/302 Redirect · 304 Not Modified · 400 Bad Request · 401 Unauthenticated · 403 Forbidden · 404 Not Found · 409 Conflict · 422 Unprocessable · 429 Rate Limited · 500 Server Error · 502 Bad Gateway · 503 Unavailable · 504 Gateway Timeout
+200 OK · 201 Created · 204 No Content · 301/302 Redirect · 304 Not Modified · 400 Bad Request · 401 Unauthorized (means not authenticated) · 403 Forbidden · 404 Not Found · 409 Conflict · 422 Unprocessable Content · 429 Too Many Requests · 500 Internal Server Error · 502 Bad Gateway · 503 Service Unavailable · 504 Gateway Timeout
 
 ## Interviewers ask
 
@@ -18,42 +18,42 @@ Source: interview handbook, not checked against documentation.
 **HTTP methods and idempotency?**
 `GET` read (safe, idempotent), `POST` create/action (not idempotent), `PUT` full replace (idempotent), `PATCH` partial update (not guaranteed idempotent), `DELETE` (idempotent), `HEAD`, `OPTIONS`. Idempotent = repeating the call has the same effect, matters for retries.
 
-Source: interview handbook, not checked against documentation.
+Source: [Idempotent - Glossary | MDN](https://developer.mozilla.org/en-US/docs/Glossary/Idempotent), [HTTP request methods - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods)
 
 **Status code families and the ones to know**
-1xx info; 2xx success (200 OK, 201 Created, 202 Accepted, 204 No Content); 3xx redirect (301, 302, 304); 4xx client (400 Bad Request, 401 Unauthenticated, 403 Forbidden, 404, 405, 409 Conflict, 415, 422 Validation, 429 Too Many Requests); 5xx server (500, 502, 503, 504).
+1xx info; 2xx success (200 OK, 201 Created, 202 Accepted, 204 No Content); 3xx redirect (301, 302, 304); 4xx client (400 Bad Request, 401 Unauthorized (it means not authenticated), 403 Forbidden, 404, 405, 409 Conflict, 415, 422 Unprocessable Content (validation), 429 Too Many Requests); 5xx server (500, 502, 503, 504).
 
-Source: interview handbook, not checked against documentation.
+Source: [HTTP response status codes - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status)
 
 **401 vs 403?**
 401: not authenticated (missing/invalid credentials). 403: authenticated but not authorised for this resource.
 
-Source: interview handbook, not checked against documentation.
+Source: [401 Unauthorized - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/401), [403 Forbidden - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/403)
 
 **Important headers?**
 `Content-Type`, `Accept`, `Authorization`, `Cache-Control`, `ETag`/`If-None-Match`, `Location`, `Set-Cookie`, `X-Request-ID`/correlation IDs (great for RCA), CORS headers (`Access-Control-Allow-Origin`), `Retry-After`.
 
-Source: interview handbook, not checked against documentation.
+Source: [HTTP headers - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers)
 
 **Authentication mechanisms?**
-Basic, API key, Bearer tokens (JWT), OAuth 2.0 flows (authorization code + PKCE, client credentials for machine-to-machine), session cookies, mTLS. Know JWT structure (header.payload.signature), that the payload is only base64, not encrypted, and expiry/refresh handling in tests.
+Basic, API key, Bearer tokens (JWT), OAuth 2.0 flows (authorization code + PKCE, client credentials for machine-to-machine), session cookies, mTLS. Know JWT structure (header.payload.signature), that the payload is only base64url-encoded, not encrypted, and expiry/refresh handling in tests.
 
-Source: interview handbook, not checked against documentation.
+Source: [RFC 7519: JSON Web Token (JWT)](https://www.rfc-editor.org/rfc/rfc7519), [RFC 9700: Best Current Practice for OAuth 2.0 Security](https://www.rfc-editor.org/rfc/rfc9700)
 
 **What is CORS and does it affect API tests?**
 Browser-enforced policy restricting cross-origin requests. Server-side/API tests (Postman, Playwright `request`) are unaffected; UI tests can surface CORS errors as failed fetches in the console/network, check them.
 
-Source: interview handbook, not checked against documentation.
+Source: [Cross-Origin Resource Sharing (CORS) - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS)
 
 **REST vs GraphQL vs gRPC, testing differences?**
-GraphQL: single endpoint, POST with query/variables, errors often inside a 200 response (`errors` array), assert on body, not only status; test resolvers, N+1 and depth limits. gRPC: protobuf over HTTP/2, needs client stubs or tools like grpcurl. REST: as above.
+GraphQL: single endpoint, POST with `query`/`variables` (GET is allowed for queries), errors often inside a 200 response (`errors` array), assert on body, not only status; test resolvers, N+1 and depth limits. gRPC: protobuf over HTTP/2, needs client stubs or tools like grpcurl. REST: as above.
 
-Source: interview handbook, not checked against documentation.
+Source: [Serving over HTTP | GraphQL](https://graphql.org/learn/serving-over-http/), [FAQ | gRPC](https://grpc.io/docs/what-is-grpc/faq/)
 
 **What is an OpenAPI/Swagger spec and how do you use it in testing?**
-Machine-readable contract. Generate typed clients, validate responses against schemas, drive contract tests, spot undocumented behaviour, feed tools (Postman import, Dredd, Schemathesis for property-based fuzzing).
+Machine-readable contract. Generate typed clients, validate responses against schemas, drive contract tests, spot undocumented behaviour, feed tools (Postman import, Schemathesis for property-based fuzzing).
 
-Source: interview handbook, not checked against documentation.
+Source: [Introduction | OpenAPI Documentation](https://learn.openapis.org/introduction.html)
 
 ### What to test in an API
 
@@ -68,22 +68,22 @@ Source: interview handbook, not checked against documentation.
 - Performance basics (response time budgets), rate limiting.
 - Backwards compatibility/versioning.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **What is contract testing and consumer-driven contracts (Pact)?**
 Consumer defines expectations; provider verifies them in its own CI. Catches breaking changes between services without full integration environments. Distinguish from schema validation (one-sided).
 
-Source: interview handbook, not checked against documentation.
+Source: [Introduction | Pact Docs](https://docs.pact.io/), [How Pact works | Pact Docs](https://docs.pact.io/getting_started/how_pact_works)
 
 **How do you test an asynchronous API (202 Accepted / webhooks / queues)?**
 Poll a status endpoint with `expect.poll`/backoff and a deadline; subscribe to the callback with a test webhook receiver (e.g. a small server or a mock service); check side effects (DB record, message on topic); assert on idempotency of retries. This is directly relevant to Cloud Tasks / Pub/Sub flows.
 
-Source: interview handbook, not checked against documentation.
+Source: [202 Accepted - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/202), [Assertions | Playwright](https://playwright.dev/docs/test-assertions#expectpoll)
 
 **How do you handle test data and environment dependencies in API tests?**
 Data builders + API-level setup/teardown; dedicated test tenants; seeded databases; feature flags; service virtualisation (WireMock, Mockoon, Prism) for third parties; contract tests to reduce the need for full environments.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **When and how would you implement a retry mechanism in API automation?**
 Interviewers ask this to check judgement more than code. A good answer covers four points: which failures deserve a retry, which must never be retried, how the retry is built, and how you keep it from hiding real bugs.
@@ -117,7 +117,7 @@ Mixing these up is a common weak answer. Polling for a job to reach `COMPLETED` 
 ```ts
 import type { APIResponse } from '@playwright/test';
 
-const RETRYABLE = [408, 429, 500, 502, 503, 504];
+const RETRYABLE = [408, 429, 502, 503, 504];
 
 export async function withRetry(
   send: () => Promise<APIResponse>,
@@ -171,7 +171,7 @@ await expect.poll(
 ).toBe('COMPLETED');
 ```
 
-*In Postman or Newman* (works in the Collection Runner or Newman only, not for single requests), add this to the request's Tests script:
+*In Postman* (works only in a collection run with the Collection Runner, the Postman CLI or Newman, not when you send a single request), add this to the request's post-response script:
 
 ```js
 const max = 3;
@@ -190,44 +190,44 @@ if ([502, 503, 504].includes(pm.response.code) && n < max) {
 
 *Senior close:* "Retries are for infrastructure noise, never for product behaviour. We retry only transient status codes and network errors, with backoff and a cap, log every retry, and track the retry rate. If it rises, that's a signal about the environment or the service, not something to tune away."
 
-Source: interview handbook, not checked against documentation.
+Source: [Retry-After header - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Retry-After), [Assertions | Playwright](https://playwright.dev/docs/test-assertions#expectpoll), [Customize request order in a collection run | Postman Docs](https://learning.postman.com/docs/collections/running-collections/building-workflows/), and checked by running the code.
 
 ### Postman
 
 **Collections, folders, environments, variables?**
-Collection = organised set of requests with shared auth/scripts. Variable scopes (narrowest wins): local → data → environment → collection → global. Use environments for base URLs and secrets (marked secret), never hard-code tokens.
+Collection = organised set of requests with shared auth/scripts. Variable scopes (narrowest wins): local → data → environment → collection → global. Use environments for base URLs. Keep secrets in Postman Vault, never hard-code tokens.
 
-Source: interview handbook, not checked against documentation.
+Source: [Store and reuse values using variables | Postman Docs](https://learning.postman.com/docs/sending-requests/variables/variables/)
 
 **Pre-request and test scripts?**
-JavaScript sandbox (`pm.*` API). Pre-request: build auth headers, generate data, set variables. Tests: `pm.test`, `pm.expect` (Chai), `pm.response.json()`, `pm.response.to.have.status(200)`, save values for chaining (`pm.environment.set`). Schema validation with `tv4`/`ajv` via `pm.response.to.have.jsonSchema`.
+JavaScript sandbox (`pm.*` API). Pre-request: build auth headers, generate data, set variables. Post-response (the tab was called Tests): `pm.test`, `pm.expect` (Chai), `pm.response.json()`, `pm.response.to.have.status(200)`, save values for chaining (`pm.environment.set`). Schema validation with `pm.response.to.have.jsonSchema`, which uses Ajv.
 
-Source: interview handbook, not checked against documentation.
+Source: [Scripting in Postman | Postman Docs](https://learning.postman.com/docs/tests-and-scripts/write-scripts/intro-to-scripts/), [pm.response | Postman Docs](https://learning.postman.com/docs/tests-and-scripts/write-scripts/postman-sandbox-reference/pm-response/)
 
 **How do you chain requests (e.g. login → create → verify)?**
-Extract token/ID in a test script into a variable, reference `{{token}}` in subsequent requests; control flow with `pm.execution.setNextRequest` (legacy `postman.setNextRequest`).
+Extract token/ID in a post-response script into a variable, reference `{{token}}` in subsequent requests; control flow with `pm.execution.setNextRequest` (the old `postman.setNextRequest` is deprecated).
 
-Source: interview handbook, not checked against documentation.
+Source: [Customize request order in a collection run | Postman Docs](https://learning.postman.com/docs/collections/running-collections/building-workflows/)
 
 **Data-driven runs?**
-Collection Runner or Newman with a CSV/JSON data file; iterate once per row; reference columns as `{{column}}`.
+Collection Runner, Postman CLI or Newman with a CSV/JSON data file; iterate once per row; reference columns as `{{column}}`.
 
-Source: interview handbook, not checked against documentation.
+Source: [Run collections using imported data | Postman Docs](https://learning.postman.com/docs/collections/running-collections/working-with-data-files/)
 
 **Newman and CI?**
-`newman run collection.json -e env.json --reporters cli,junit,htmlextra`; run in GitHub Actions/Jenkins; fail the build on test failures; export reports as artefacts. Also the Postman CLI as the newer alternative.
+`newman run collection.json -e env.json --reporters cli,junit` (`htmlextra` is a separate npm package); run in GitHub Actions/Jenkins; Newman exits with a non-zero code when a test fails, which fails the build; export reports as artefacts. Postman now recommends the Postman CLI (`postman collection run`). Newman only reads the v2.1 collection format, not the v3 format of Postman v12 and later.
 
-Source: interview handbook, not checked against documentation.
+Source: [Newman command reference | Postman Docs](https://learning.postman.com/docs/collections/using-newman-cli/newman-options/), [Migrate scripts from Newman to the Postman CLI](https://learning.postman.com/docs/reference/newman-cli/migrate-to-postman-cli), and checked by running the code.
 
 **Mock servers and monitors?**
 Mock server returns example responses for a collection (front-end/parallel development). Monitors schedule collection runs against live environments (synthetic checks).
 
-Source: interview handbook, not checked against documentation.
+Source: [Set up a mock server | Postman Docs](https://learning.postman.com/docs/design-apis/mock-apis/set-up-mock-servers/), [Monitor your APIs in Postman | Postman Docs](https://learning.postman.com/docs/monitoring-your-api/intro-monitors/)
 
 **When would you *not* use Postman for automation?**
 When tests need to live with the code, share types/builders, and run in the same pipeline as UI tests, then Playwright's API testing or a code-based client (supertest, axios + Jest) fits better. Postman excels for exploration, documentation, quick chaining and non-developer collaboration.
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 ### Hands-on
 
@@ -241,7 +241,7 @@ import { z } from 'zod';
 const UserSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),                               // Zod 4; z.string().email() is deprecated
   role: z.enum(['admin', 'editor', 'viewer']),
   active: z.boolean(),
 });
@@ -273,7 +273,7 @@ expect(validate(body), JSON.stringify(validate.errors)).toBe(true);
 
 Why validate the schema at all? TypeScript types disappear at runtime, so `as User` checks nothing. A schema catches renamed fields, fields that turned into `null`, or numbers that became strings, even when the values you assert on still look right.
 
-Source: interview handbook, not checked against documentation.
+Source: [Migration guide | Zod](https://zod.dev/v4/changelog), and checked by running the code.
 
 **Hands-on: negative test**
 Assert on the status code *and* the error body:
@@ -284,7 +284,7 @@ expect(res.status()).toBe(404);
 expect(await res.json()).toEqual({ error: 'not found' });   // and no stack trace or internal details leaked
 ```
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.
 
 **Hands-on: multipart file upload**
 ```ts
@@ -299,11 +299,12 @@ expect(res.status()).toBe(201);
 
 Test cases to mention: wrong file type, empty file, a file over the size limit (expect `413`), a file name with umlauts or spaces, and path traversal in the name (`../../etc/passwd`).
 
-Source: interview handbook, not checked against documentation.
+Source: [APIRequestContext | Playwright](https://playwright.dev/docs/api/class-apirequestcontext#api-request-context-post), [413 Content Too Large - HTTP | MDN](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status/413), and checked by running the code.
 
 **Hands-on: tokens: get one once and reuse it**
 ```ts
 // fixtures.ts: a worker-scoped API client authenticated once per worker
+import { test as base, type APIRequestContext } from '@playwright/test';
 export const test = base.extend<{}, { api: APIRequestContext }>({
   api: [async ({ playwright }, use) => {
     const auth = await playwright.request.newContext({ baseURL: process.env.BASE_URL });
@@ -330,7 +331,7 @@ expect(payload.exp * 1000).toBeGreaterThan(Date.now());   // exp is in seconds
 
 Auth test cases: no token → 401; expired or tampered token → 401; a valid token with the wrong role → 403; user A's token used on user B's resource → 403 or 404 (IDOR).
 
-Source: interview handbook, not checked against documentation.
+Source: [RFC 7519: JSON Web Token (JWT)](https://www.rfc-editor.org/rfc/rfc7519), and checked by running the code.
 
 **Hands-on: curl and jq**
 Expect to reproduce or debug a call from the terminal:
@@ -344,9 +345,9 @@ curl -s https://api.example.com/users | jq '.[] | select(.active) | .email'   # 
 curl -sI https://api.example.com/health                                      # headers only
 ```
 
-`-v` shows the full request and response, including TLS details. `-w` prints the status code and timing. Browser DevTools and Postman can both export a request as a curl command, which is handy in bug reports.
+`-v` also shows the request and response headers, and the TLS handshake on HTTPS. `-w` prints the status code and timing. Browser DevTools and Postman can both export a request as a curl command, which is handy in bug reports.
 
-Source: interview handbook, not checked against documentation.
+Source: [curl man page](https://curl.se/docs/manpage.html), [jq Manual](https://jqlang.org/manual/), and checked by running the code.
 
 **Hands-on: pagination, filtering and sorting tests**
 - The first page, the last page, and one page past the end (expect an empty list, not a 500).
@@ -354,9 +355,9 @@ Source: interview handbook, not checked against documentation.
 - No duplicates or gaps across pages: collect every ID from all pages and compare the count with the total.
 - Sorting is stable when two items have equal values, and the sort field is validated (`?sort=password` must not work).
 
-Source: interview handbook, not checked against documentation.
+Source: experience, not documentation.
 
 **Hands-on: idempotency and concurrency**
 Send the same `POST` twice at once with `Promise.all([...])`, then check that only one resource was created, or that the second call gets a `409`. Double-clicking a submit button is the UI version of the same bug.
 
-Source: interview handbook, not checked against documentation.
+Source: checked by running the code, not documentation.

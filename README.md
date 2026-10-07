@@ -97,7 +97,7 @@ Solve those without looking anything up. Wherever you got stuck, do that whole m
 | 24 | Design principles, unit testing and BDD | – | [notes/24](notes/24-design-unit-testing-bdd.md) |
 | 25 | Performance, security, test data and the command line | – | [notes/25](notes/25-performance-security-data-cli.md) |
 
-Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract. Answers end with a `Source:` line. Where it links to official documentation, the answer was checked against that page in October 2026 (Playwright 1.63). Where it says "experience, not documentation", it is advice, not fact. Where it says "checked by running the code", the solution was compiled and run against test cases. A few answers still say "interview handbook, not checked against documentation": treat those as unverified.
+Every note is one page: the idea in a few lines, a cheat sheet, and an **Interviewers ask** section with the follow-up questions that topic tends to attract. Answers end with a `Source:` line. Where it links to official documentation, the answer was checked against that page in October 2026 (Playwright 1.63). Where it says "experience, not documentation", it is advice, not fact. Where it says "checked by running the code", the solution was compiled and run against test cases. Two answers still say "interview handbook, not checked against documentation": treat those as unverified.
 
 ## Commands
 
